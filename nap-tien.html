@@ -8,207 +8,401 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
+    <!-- Firebase SDK - CẦN THIẾT ĐỂ GỬI DỮ LIỆU -->
+    <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-database-compat.js"></script>
+
 <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
         --primary: #06b6d4; --secondary: #3b82f6; --dark-bg: #020617; 
         --card-bg: rgba(30, 41, 59, 0.5); --glass-border: rgba(255, 255, 255, 0.08);
         --text-main: #f8fafc; --text-sub: #94a3b8;
+        --success: #10b981;
     }
 
     body {
         font-family: 'Plus Jakarta Sans', sans-serif;
         background-color: var(--dark-bg); color: var(--text-main);
         background-image: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 50%);
-        min-height: 100vh; line-height: 1.6; padding-bottom: 50px;
+        min-height: 100vh; line-height: 1.6; padding-bottom: 80px; /* Tăng padding để không đè lên nhạc */
     }
 
-    .container { max-width: 500px; margin: 0 auto; padding: 20px; }
+    .container { max-width: 500px; margin: 0 auto; padding: 20px; position: relative; z-index: 2; }
 
-    /* Header */
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+    }
+
     .header { text-align: center; margin-bottom: 30px; padding-top: 20px; }
     .header-icon { 
         width: 60px; height: 60px; background: linear-gradient(135deg, #6366f1, #a855f7);
         border-radius: 18px; display: flex; align-items: center; justify-content: center;
         margin: 0 auto 15px; font-size: 24px; box-shadow: 0 10px 20px rgba(168, 85, 247, 0.3);
+        color: white; animation: float 3s ease-in-out infinite;
     }
     .header h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 5px; }
+    
     .status-badge {
         display: inline-flex; align-items: center; gap: 8px;
         background: rgba(16, 185, 129, 0.1); color: #10b981;
-        padding: 6px 16px; border-radius: 50px; font-size: 0.85rem; font-weight: 700;
-        border: 1px solid rgba(16, 185, 129, 0.2); margin-top: 10px;
+        padding: 8px 20px; border-radius: 50px; font-size: 0.9rem; font-weight: 700;
+        border: 1px solid rgba(16, 185, 129, 0.2); margin-top: 15px;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.1); animation: float 4s ease-in-out infinite;
     }
 
-    /* Section Wrapper */
     .section-card {
         background: var(--card-bg); border: 1px solid var(--glass-border);
         border-radius: 24px; padding: 25px; margin-bottom: 20px; backdrop-filter: blur(10px);
     }
 
-    /* QR Area */
-    .qr-container { text-align: center; margin-bottom: 10px; }
+    .qr-container { text-align: center; }
+    .qr-title-box { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 15px; }
     .qr-box {
-        background: #fff; padding: 15px; border-radius: 20px; display: inline-block;
-        margin-bottom: 15px; width: 100%; max-width: 280px;
+        background: #fff; padding: 12px; border-radius: 20px; display: inline-block;
+        margin-bottom: 15px; width: 100%; max-width: 280px; box-shadow: 0 0 40px rgba(6, 182, 212, 0.15);
     }
-    .qr-box img { width: 100%; border-radius: 10px; }
-    .timer { color: #f59e0b; font-weight: 700; font-size: 0.9rem; }
+    .qr-box img { width: 100%; border-radius: 10px; display: block; }
+    .timer-box { font-size: 0.9rem; color: #fbbf24; font-weight: 700; }
 
-    /* Info Blocks */
     .info-item {
-        display: flex; align-items: center; gap: 15px; padding: 15px;
-        background: rgba(255, 255, 255, 0.03); border-radius: 18px;
-        margin-bottom: 12px; border: 1px solid var(--glass-border);
-    }
-    .info-icon {
-        width: 45px; height: 45px; border-radius: 12px;
-        display: flex; align-items: center; justify-content: center; font-size: 18px;
-        flex-shrink: 0;
+        display: flex; align-items: center; gap: 15px; padding: 12px 15px;
+        background: rgba(255, 255, 255, 0.03); border-radius: 15px;
+        margin-bottom: 10px; border: 1px solid var(--glass-border);
     }
     .info-content { flex: 1; }
-    .info-label { font-size: 0.7rem; color: var(--text-sub); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+    .info-label { font-size: 0.65rem; color: var(--text-sub); text-transform: uppercase; font-weight: 700; }
     .info-value { font-size: 1rem; font-weight: 700; color: #fff; }
     .copy-btn {
         width: 35px; height: 35px; border-radius: 10px; border: none;
-        background: rgba(59, 130, 246, 0.1); color: var(--secondary);
-        cursor: pointer; transition: 0.3s;
+        background: rgba(59, 130, 246, 0.1); color: var(--secondary); cursor: pointer;
     }
-    .copy-btn:active { transform: scale(0.9); }
 
-    /* Nạp nhanh */
-    .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+    .custom-input {
+        width: 100%; padding: 15px; border-radius: 15px; border: 1px solid var(--glass-border);
+        background: rgba(0,0,0,0.3); color: #fff; font-size: 1.2rem; font-weight: 700;
+        outline: none; text-align: center; margin-bottom: 15px;
+    }
+    .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
     .price-item {
         background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border);
-        padding: 15px; border-radius: 15px; text-align: center; cursor: pointer; transition: 0.3s;
+        padding: 15px; border-radius: 15px; text-align: center; cursor: pointer; font-weight: 700; transition: 0.3s;
     }
-    .price-item:hover { border-color: var(--primary); background: rgba(6, 182, 212, 0.05); }
-    .price-item i { display: block; margin-bottom: 5px; color: var(--secondary); font-size: 1.1rem; }
-    .price-item span { font-weight: 800; font-size: 0.95rem; }
+    .price-item:hover { background: rgba(6, 182, 212, 0.1); border-color: var(--primary); }
 
-    /* Hướng dẫn */
-    .steps { list-style: none; padding: 0; }
-    .steps li {
-        display: flex; gap: 12px; margin-bottom: 15px; font-size: 0.9rem; color: var(--text-sub);
+    .btn-success {
+        width: 100%; padding: 18px; border-radius: 18px; border: none;
+        background: linear-gradient(90deg, #10b981, #059669);
+        color: white; font-weight: 800; font-size: 1.1rem; cursor: pointer;
+        box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2); margin-bottom: 12px;
+        display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s;
     }
+    .btn-update {
+        width: 100%; padding: 14px; border-radius: 18px; border: 1px solid var(--glass-border);
+        background: rgba(255,255,255,0.05); color: var(--text-sub); font-weight: 600; font-size: 0.9rem; cursor: pointer;
+    }
+
+    .steps { list-style: none; }
+    .steps li { display: flex; gap: 12px; margin-bottom: 15px; font-size: 0.9rem; color: var(--text-sub); align-items: flex-start; }
     .step-num {
-        width: 22px; height: 22px; background: rgba(255,255,255,0.1);
-        border-radius: 50%; display: flex; align-items: center; justify-content: center;
-        font-size: 0.75rem; color: #fff; flex-shrink: 0; margin-top: 2px;
+        width: 22px; height: 22px; background: var(--primary); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.75rem; flex-shrink: 0; font-weight: 700;
     }
 
-    .warning-box {
-        background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2);
-        padding: 15px; border-radius: 15px; color: #f59e0b; display: flex; gap: 12px; font-size: 0.85rem;
+    /* --- MUSIC PLAYER STYLE --- */
+    .music-player {
+        position: fixed; bottom: 30px; left: 30px; z-index: 999;
+        display: flex; align-items: center; gap: 15px;
+        background: rgba(15, 23, 42, 0.8); padding: 8px 15px; border-radius: 50px;
+        border: 1px solid var(--glass-border); backdrop-filter: blur(10px);
+        transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
+    .music-info { width: 0; overflow: hidden; opacity: 0; transition: 0.5s; display: flex; flex-direction: column; gap: 4px; }
+    .music-player.active .music-info { width: 150px; opacity: 1; }
+    .music-btn {
+        width: 45px; height: 45px; border-radius: 50%; 
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    @keyframes pulse-glow { 0% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(6, 182, 212, 0); } 100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); } }
+    .playing { animation: pulse-glow 2s infinite; }
+    .progress-container { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; cursor: pointer; position: relative; }
+    .progress-bar { height: 100%; background: var(--primary); width: 0%; border-radius: 10px; }
+    .time-display { font-size: 10px; color: var(--text-sub); display: flex; justify-content: space-between; }
 </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- Header -->
     <header class="header">
         <div class="header-icon"><i class="fas fa-wallet"></i></div>
         <h1>Nạp tiền QR Code</h1>
-        <p style="color: var(--text-sub); font-size: 0.9rem;">Quét mã QR để thanh toán nhanh chóng</p>
         <div class="status-badge">
-            <i class="fas fa-clock"></i> Số dư hiện tại: 0đ
+            <i class="fas fa-history"></i> Số dư: <span id="current-balance" style="color: #10b981; margin-left: 5px;">Đang tải...</span>
         </div>
     </header>
 
-    <!-- QR Section -->
     <div class="section-card">
         <div class="qr-container">
-            <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 15px;">
-                <span style="color: #ef4444; font-weight: 800;">Viet<span style="color: #3b82f6;">QR</span></span>
-                <span style="width: 6px; height: 6px; background: #f59e0b; border-radius: 50%;"></span>
-                <span class="timer">Đang chờ thanh toán (1m 10s)</span>
+            <div class="qr-title-box">
+                <span style="color: #ef4444; font-weight: 800; font-size: 1.1rem;">Viet<span style="color: #3b82f6;">QR</span></span>
+                <span class="timer-box">Làm mới sau <span id="countdown">120</span>s</span>
             </div>
             <div class="qr-box">
-                <!-- Mã QR tự động điền nội dung -->
-                <img src="https://img.vietqr.io/image/MB-0916891554-compact2.jpg?amount=0&addInfo=NAP2818&accountName=LE%20NGUYEN%20CHIEN%20THANG" alt="QR Code">
+                <img id="qr-image" src="" alt="QR Code">
             </div>
-            <p style="font-size: 0.8rem; color: var(--text-sub);">Hệ thống cộng tiền tự động sau 1-5 phút</p>
         </div>
     </div>
 
-    <!-- Bank Info Section -->
     <div class="section-card">
-        <!-- Ngân hàng -->
         <div class="info-item">
-            <div class="info-icon" style="background: linear-gradient(135deg, #818cf8, #6366f1);"><i class="fas fa-university"></i></div>
             <div class="info-content">
                 <div class="info-label">Ngân hàng</div>
-                <div class="info-value">MB Bank - Quân Đội</div>
+                <div class="info-value">BIDV</div>
             </div>
         </div>
-
-        <!-- STK -->
         <div class="info-item">
-            <div class="info-icon" style="background: linear-gradient(135deg, #f472b6, #db2777);"><i class="fas fa-credit-card"></i></div>
+            <div class="info-content">
+                <div class="info-label">Chủ tài khoản</div>
+                <div class="info-value">KIEU ANH TIEN</div>
+            </div>
+        </div>
+        <div class="info-item">
             <div class="info-content">
                 <div class="info-label">Số tài khoản</div>
-                <div class="info-value" id="stk">0916891554</div>
+                <div class="info-value" id="stk">0782275997</div>
             </div>
             <button class="copy-btn" onclick="copyText('stk')"><i class="fas fa-copy"></i></button>
         </div>
-
-        <!-- Chủ TK -->
-        <div class="info-item">
-            <div class="info-icon" style="background: linear-gradient(135deg, #38bdf8, #0284c7);"><i class="fas fa-user"></i></div>
+        <div class="info-item" style="border: 1px solid rgba(251, 113, 133, 0.4);">
             <div class="info-content">
-                <div class="info-label">Chủ tài khoản</div>
-                <div class="info-value">LE NGUYEN CHIEN THANG</div>
-            </div>
-        </div>
-
-        <!-- Nội dung -->
-        <div class="info-item" style="border: 1px solid rgba(244, 114, 182, 0.3);">
-            <div class="info-icon" style="background: linear-gradient(135deg, #fb923c, #ea580c);"><i class="fas fa-comment-dots"></i></div>
-            <div class="info-content">
-                <div class="info-label">Nội dung chuyển khoản</div>
-                <div class="info-value" id="noidung" style="color: #fb7185;">NAP2818</div>
+                <div class="info-label">Nội dung (Bắt buộc)</div>
+                <div class="info-value" id="noidung" style="color: #fb7185; font-size: 1.1rem;">--</div>
             </div>
             <button class="copy-btn" onclick="copyText('noidung')"><i class="fas fa-copy"></i></button>
         </div>
-
-        <div class="warning-box">
-            <i class="fas fa-exclamation-triangle" style="margin-top: 3px;"></i>
-            <span>Vui lòng chuyển khoản đúng nội dung để được cộng tiền tự động.</span>
-        </div>
     </div>
 
-    <!-- Chọn số tiền nạp Section -->
     <div class="section-card">
-        <h3 style="font-size: 1.1rem; margin-bottom: 5px;"><i class="fas fa-coins" style="color: #fbbf24;"></i> Chọn số tiền nạp</h3>
+        <input type="number" id="inputAmount" class="custom-input" value="50000">
         <div class="price-grid">
-            <div class="price-item"><i class="fas fa-star"></i><span>50.000đ</span></div>
-            <div class="price-item"><i class="fas fa-bolt"></i><span>100.000đ</span></div>
-            <div class="price-item"><i class="fas fa-layer-group"></i><span>200.000đ</span></div>
-            <div class="price-item"><i class="fas fa-briefcase"></i><span>500.000đ</span></div>
+            <div class="price-item" onclick="setAmount(20000)">20.000đ</div>
+            <div class="price-item" onclick="setAmount(50000)">50.000đ</div>
+            <div class="price-item" onclick="setAmount(100000)">100.000đ</div>
+            <div class="price-item" onclick="setAmount(500000)">500.000đ</div>
         </div>
+
+        <button class="btn-success" onclick="sendToAdmin()">
+            <i class="fas fa-check-circle"></i> ĐÃ CHUYỂN KHOẢN
+        </button>
+        
+        <button class="btn-update" onclick="generateQR()">
+            <i class="fas fa-sync-alt"></i> Cập nhật QR & Mã mới
+        </button>
     </div>
 
-    <!-- Hướng dẫn -->
     <div class="section-card">
-        <h3 style="margin-bottom: 20px;">Hướng dẫn thanh toán</h3>
+        <h3 style="margin-bottom: 20px; font-size: 1rem;"><i class="fas fa-info-circle" style="color: var(--primary);"></i> Hướng dẫn</h3>
         <ul class="steps">
-            <li><div class="step-num">1</div> Mở App Banking trên điện thoại</li>
-            <li><div class="step-num">2</div> Chọn chức năng quét mã QR</li>
-            <li><div class="step-num">3</div> Quét mã QR ở phía trên</li>
-            <li><div class="step-num">4</div> Kiểm tra thông tin và xác nhận</li>
-            <li><div class="step-num">5</div> Tiền sẽ tự động cộng sau 1-5 phút</li>
+            <li><div class="step-num">1</div> Quét mã QR và kiểm tra tên người nhận.</li>
+            <li><div class="step-num">2</div> Giữ nguyên nội dung chuyển khoản tự động.</li>
+            <li><div class="step-num">3</div> Nhấn <b>"Đã chuyển khoản"</b> để Admin duyệt tiền.</li>
         </ul>
     </div>
 </div>
 
+<!-- Music Player -->
+<div class="music-player" id="musicContainer">
+    <div class="music-info">
+        <div style="font-size: 11px; font-weight: 700; white-space: nowrap; color: #fff;">BGM - KTIENXIOS</div>
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="time-display">
+            <span id="currTime">0:00</span>
+            <span id="durTime">0:00</span>
+        </div>
+    </div>
+    <audio id="myAudio" loop>
+        <source src="https://scared-aquamarine-wzjsbpfpzz.edgeone.app/snaptt.me-48765111.mp3" type="audio/mpeg">
+    </audio>
+    <button class="music-btn" onclick="toggleMusic()" id="musicBtn">
+        <i class="fas fa-music"></i>
+    </button>
+</div>
+
 <script>
+    // --- CẤU HÌNH FIREBASE ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyDWe6sAcxUyis87c8GPLFwo5Z0zS3eO-34",
+        authDomain: "severupdate-1b36a.firebaseapp.com",
+        databaseURL: "https://severupdate-1b36a-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "severupdate-1b36a",
+        storageBucket: "severupdate-1b36a.firebasestorage.app",
+        messagingSenderId: "123894557961",
+        appId: "1:123894557961:web:c0c9ec59fb65f71da937d8"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const auth = firebase.auth();
+
+    let timeLeft = 120; 
+    const BANK_ID = "BIDV";
+    const ACCOUNT_NO = "0782275997";
+    const ACCOUNT_NAME = "KIEU ANH TIEN";
+
+    // Tự động load số dư khi vào trang
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            const safeEmail = user.email.replace(/\./g, '_');
+            database.ref('Users/' + safeEmail + '/balance').on('value', (snap) => {
+                const balance = snap.val() || 0;
+                document.getElementById('current-balance').innerText = balance.toLocaleString() + 'đ';
+            });
+        } else {
+            document.getElementById('current-balance').innerText = 'Chưa đăng nhập';
+        }
+    });
+
+    function setAmount(val) {
+        document.getElementById('inputAmount').value = val;
+        generateQR();
+    }
+
+    function generateMemo() {
+        const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ';
+        return `KTIEN${chars.charAt(Math.floor(Math.random() * chars.length))}${Math.floor(100 + Math.random() * 900)}`; 
+    }
+
+    function generateQR() {
+        const amount = document.getElementById('inputAmount').value;
+        const memo = generateMemo();
+        document.getElementById('noidung').innerText = memo;
+        
+        const qrUrl = `https://img.vietqr.io/image/${BANK_ID}-${ACCOUNT_NO}-compact2.png?amount=${amount}&addInfo=${memo}&accountName=${encodeURIComponent(ACCOUNT_NAME)}`;
+        const qrImg = document.getElementById('qr-image');
+        qrImg.style.opacity = '0.3';
+        qrImg.src = qrUrl;
+        qrImg.onload = () => { qrImg.style.opacity = '1'; };
+        timeLeft = 120; 
+    }
+
+    // --- HÀM GỬI THÔNG BÁO CHO ADMIN ---
+    async function sendToAdmin() {
+        const amount = document.getElementById('inputAmount').value;
+        const memo = document.getElementById('noidung').innerText;
+        const user = auth.currentUser;
+
+        if (!user) {
+            alert("Vui lòng đăng nhập để thực hiện nạp tiền!");
+            return;
+        }
+
+        try {
+            // Đẩy dữ liệu vào nhánh RechargeRequests để Admin nhận được
+            await database.ref('RechargeRequests').push({
+                email: user.email,
+                amount: parseInt(amount),
+                content: memo,
+                date: new Date().toLocaleString('vi-VN'),
+                status: 'pending'
+            });
+
+            alert(`✅ Đã gửi yêu cầu nạp ${parseInt(amount).toLocaleString()}đ!\nNội dung: ${memo}\nAdmin đang kiểm tra, vui lòng đợi.`);
+        } catch (error) {
+            alert("Lỗi: " + error.message);
+        }
+    }
+
+    setInterval(() => {
+        if (timeLeft > 0) {
+            timeLeft--;
+            document.getElementById('countdown').innerText = timeLeft;
+        } else {
+            generateQR();
+        }
+    }, 1000);
+
     function copyText(id) {
         const text = document.getElementById(id).innerText;
-        navigator.clipboard.writeText(text).then(() => {
-            alert("Đã sao chép: " + text);
-        });
+        navigator.clipboard.writeText(text).then(() => alert("Đã sao chép!"));
     }
+
+// --- LOGIC NHẠC TỰ ĐỘNG KHI CHẠM ---
+const audio = document.getElementById("myAudio");
+const musicBtn = document.getElementById("musicBtn");
+const musicContainer = document.getElementById("musicContainer");
+
+// 1. Cấu hình nguồn nhạc từ products.js
+if (typeof KTIENXIOS_CONFIG !== 'undefined') {
+    const musicSource = audio.querySelector('source');
+    musicSource.src = KTIENXIOS_CONFIG.musicUrl;
+    audio.load();
+    
+    const titleDisplay = document.querySelector('.music-info div');
+    if (titleDisplay) titleDisplay.innerText = KTIENXIOS_CONFIG.musicTitle;
+}
+
+// 2. Hàm cập nhật giao diện
+function updateMusicUI(isPlaying) {
+    if (isPlaying) {
+        musicBtn.classList.add('playing');
+        musicBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        if(musicContainer) musicContainer.classList.add('active');
+    } else {
+        musicBtn.classList.remove('playing');
+        musicBtn.innerHTML = '<i class="fas fa-music"></i>';
+        if(musicContainer) musicContainer.classList.remove('active');
+    }
+}
+
+// 3. Hàm xử lý phát nhạc (Fix lỗi trình duyệt chặn)
+function playMusic() {
+    audio.play().then(() => {
+        localStorage.setItem('musicPlaying', 'true');
+        updateMusicUI(true);
+        // Sau khi đã phát thành công, gỡ bỏ sự kiện lắng nghe để tránh phát lại khi chạm tiếp
+        document.removeEventListener('click', playMusic);
+        document.removeEventListener('touchstart', playMusic);
+    }).catch(err => console.log("Trình duyệt chờ tương tác..."));
+}
+
+// 4. Lắng nghe tương tác đầu tiên trên màn hình để mở nhạc
+if (localStorage.getItem('musicPlaying') !== 'false') {
+    document.addEventListener('click', playMusic);
+    document.addEventListener('touchstart', playMusic);
+}
+
+// 5. Nút bấm thủ công (Bật/Tắt)
+function toggleMusic() {
+    if (audio.paused) {
+        audio.play();
+        localStorage.setItem('musicPlaying', 'true');
+        updateMusicUI(true);
+    } else {
+        audio.pause();
+        localStorage.setItem('musicPlaying', 'false');
+        updateMusicUI(false);
+    }
+}
+
+// 6. Đồng bộ thời gian nhạc khi chuyển trang
+audio.addEventListener('timeupdate', () => {
+    localStorage.setItem('musicTime', audio.currentTime);
+});
+
+window.addEventListener('load', () => {
+    const savedTime = localStorage.getItem('musicTime');
+    const isPlaying = localStorage.getItem('musicPlaying');
+    if (savedTime) audio.currentTime = parseFloat(savedTime);
+    if (isPlaying === 'true') {
+        playMusic();
+    }
+});
 </script>
 
 </body>
