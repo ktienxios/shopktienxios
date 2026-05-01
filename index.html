@@ -281,7 +281,7 @@
         window.location.href = (type === 'login') ? 'login.html' : 'signup.html';
     }
 
-// --- LOGIC NHẠC TỰ ĐỘNG KHI CHẠM ---
+// --- LOGIC KHỞI TẠO HỆ THỐNG (INDEX) ---
 const audio = document.getElementById("myAudio");
 const musicBtn = document.getElementById("musicBtn");
 const musicContainer = document.getElementById("musicContainer");
@@ -296,7 +296,50 @@ if (typeof KTIENXIOS_CONFIG !== 'undefined') {
     if (titleDisplay) titleDisplay.innerText = KTIENXIOS_CONFIG.musicTitle;
 }
 
-// 2. Hàm cập nhật giao diện
+// 2. Hàm hiển thị sản phẩm (Render)
+function renderHomeProducts() {
+    const container = document.getElementById('productContainer');
+    // Kiểm tra xem biến KTIENXIOS_PRODUCTS có tồn tại không
+    if(!container || typeof KTIENXIOS_PRODUCTS === 'undefined') {
+        console.error("Lỗi: Không tìm thấy dữ liệu sản phẩm!");
+        return;
+    }
+    
+    let html = '';
+    KTIENXIOS_PRODUCTS.forEach(p => {
+        let optionsHtml = '';
+        if (p.options && p.options.length > 0) {
+            optionsHtml = `
+                <div style="margin-bottom: 15px;">
+                    <label style="font-size: 0.8rem; color: var(--text-sub);">Chọn gói dịch vụ:</label>
+                    <select onchange="updatePrice(this, '${p.id}')" style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--glass-border); outline: none; margin-top: 5px; cursor: pointer;">
+                        ${p.options.map(opt => `<option value="${opt.price}">${opt.label}</option>`).join('')}
+                    </select>
+                </div>`;
+        }
+
+        html += `
+            <div class="p-card reveal">
+                <img src="${p.img}" class="p-img">
+                ${p.hot ? '<div style="position:absolute; top:20px; right:20px; background:var(--primary); color:#fff; padding:5px 12px; border-radius:50px; font-size:0.7rem; font-weight:800;">HOT</div>' : ''}
+                <h3 style="margin-bottom:10px;">${p.name}</h3>
+                <p style="color:var(--text-sub); font-size:0.95rem; margin-bottom:15px;">${p.desc}</p>
+                
+                ${optionsHtml}
+
+                <div style="font-weight:800; color:var(--primary); margin-bottom:15px; font-size: 1.2rem;">
+                    Giá: <span id="price-${p.id}">${p.options ? p.options[0].price : p.price}</span>
+                </div>
+                <button onclick="openAuth('login')" class="btn-lnd btn-primary" style="width:100%;">MUA NGAY</button>
+            </div>`;
+    });
+    container.innerHTML = html;
+    
+    // Sau khi render xong thì chạy hiệu ứng hiện hình (reveal)
+    setTimeout(reveal, 100); 
+}
+
+// 3. Logic Nhạc (Tự động phát khi chạm)
 function updateMusicUI(isPlaying) {
     if (isPlaying) {
         musicBtn.classList.add('playing');
@@ -309,24 +352,15 @@ function updateMusicUI(isPlaying) {
     }
 }
 
-// 3. Hàm xử lý phát nhạc (Fix lỗi trình duyệt chặn)
 function playMusic() {
     audio.play().then(() => {
         localStorage.setItem('musicPlaying', 'true');
         updateMusicUI(true);
-        // Sau khi đã phát thành công, gỡ bỏ sự kiện lắng nghe để tránh phát lại khi chạm tiếp
         document.removeEventListener('click', playMusic);
         document.removeEventListener('touchstart', playMusic);
-    }).catch(err => console.log("Trình duyệt chờ tương tác..."));
+    }).catch(() => {});
 }
 
-// 4. Lắng nghe tương tác đầu tiên trên màn hình để mở nhạc
-if (localStorage.getItem('musicPlaying') !== 'false') {
-    document.addEventListener('click', playMusic);
-    document.addEventListener('touchstart', playMusic);
-}
-
-// 5. Nút bấm thủ công (Bật/Tắt)
 function toggleMusic() {
     if (audio.paused) {
         audio.play();
@@ -339,18 +373,26 @@ function toggleMusic() {
     }
 }
 
-// 6. Đồng bộ thời gian nhạc khi chuyển trang
-audio.addEventListener('timeupdate', () => {
-    localStorage.setItem('musicTime', audio.currentTime);
-});
-
+// --- 4. KÍCH HOẠT KHI TRANG LOAD XONG ---
 window.addEventListener('load', () => {
+    // Đổ dữ liệu sản phẩm
+    renderHomeProducts(); 
+
+    // Khôi phục trạng thái nhạc
     const savedTime = localStorage.getItem('musicTime');
     const isPlaying = localStorage.getItem('musicPlaying');
     if (savedTime) audio.currentTime = parseFloat(savedTime);
+    
     if (isPlaying === 'true') {
         playMusic();
+    } else {
+        document.addEventListener('click', playMusic);
+        document.addEventListener('touchstart', playMusic);
     }
+});
+
+audio.addEventListener('timeupdate', () => {
+    localStorage.setItem('musicTime', audio.currentTime);
 });
 </script>
 </body>
