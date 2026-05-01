@@ -75,11 +75,25 @@
     .menu-link:hover { background: rgba(6, 182, 212, 0.1); border-color: var(--glass-border); color: var(--primary); }
 
     .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 40px; }
-    .p-card { background: var(--card-bg); border: 1px solid var(--glass-border); padding: 25px; border-radius: 24px; transition: 0.4s; backdrop-filter: blur(10px); position: relative; overflow: hidden; }
+    .p-card { background: var(--card-bg); border: 1px solid var(--glass-border); padding: 25px; border-radius: 24px; transition: 0.4s; backdrop-filter: blur(10px); position: relative; overflow: hidden; display: flex; flex-direction: column; }
     .p-img { width: 100%; height: 180px; object-fit: cover; border-radius: 16px; margin-bottom: 20px; }
     
-    .btn-lnd { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 32px; border-radius: 14px; font-weight: 700; text-decoration: none; transition: 0.4s; cursor: pointer; border: none; }
+    .btn-lnd { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 32px; border-radius: 14px; font-weight: 700; text-decoration: none; transition: 0.4s; cursor: pointer; border: none; margin-top: auto; }
     .btn-primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; width: 100%; }
+
+    /* --- PHẦN THỐNG KÊ KHO (ACC CLONE) --- */
+    .stock-info {
+        display: flex; gap: 10px; margin-bottom: 15px;
+    }
+    .stock-badge {
+        font-size: 0.7rem; font-weight: 700; padding: 4px 10px; border-radius: 8px;
+        background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.2);
+    }
+    .sold-badge {
+        font-size: 0.7rem; font-weight: 700; padding: 4px 10px; border-radius: 8px;
+        background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.2);
+        color: #fbbf24;
+    }
 
     /* --- MUSIC PLAYER STYLE --- */
     .music-player {
@@ -155,7 +169,7 @@
     <!-- Music Player -->
     <div class="music-player" id="musicContainer">
         <div class="music-info">
-            <div style="font-size: 11px; font-weight: 700; white-space: nowrap;">BGM - KTIENXIOS</div>
+            <div id="musicTitleDisplay" style="font-size: 11px; font-weight: 700; white-space: nowrap;">BGM - KTIENXIOS</div>
             <div class="progress-container" id="progressContainer">
                 <div class="progress-bar" id="progressBar"></div>
             </div>
@@ -165,7 +179,7 @@
             </div>
         </div>
         <audio id="myAudio" loop>
-            <source src="https://scared-aquamarine-wzjsbpfpzz.edgeone.app/snaptt.me-48765111.mp3" type="audio/mpeg">
+            <source src="" type="audio/mpeg">
         </audio>
         <button class="music-btn" onclick="toggleMusic()" id="musicBtn">
             <i class="fas fa-music"></i>
@@ -230,31 +244,86 @@
 
         let html = '';
         KTIENXIOS_PRODUCTS.forEach(p => {
-            let optionsHtml = '';
-            if (p.options && p.options.length > 0) {
-                optionsHtml = `
+            let actionArea = '';
+            let priceLabel = '';
+            let stockStats = '';
+
+            if (p.isClone) {
+                priceLabel = `<span id="price-dash-${p.id}">${p.price.toLocaleString()}</span>đ / Acc`;
+                // Khu vực hiển thị Còn lại & Đã bán
+                stockStats = `
+                    <div class="stock-info">
+                        <div class="stock-badge"><i class="fas fa-boxes"></i> Còn: <span id="stock-count-${p.id}">0</span></div>
+                        <div class="sold-badge"><i class="fas fa-shopping-basket"></i> Bán: <span id="sold-count-${p.id}">0</span></div>
+                    </div>`;
+                
+                actionArea = `
                     <div style="margin-bottom: 15px;">
-                        <select id="select-${p.id}" onchange="updateDashPrice(this, '${p.id}')" style="width: 100%; padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--glass-border); outline: none; cursor: pointer;">
-                            ${p.options.map(opt => `<option value="${opt.price}">${opt.label} - ${opt.price}</option>`).join('')}
+                        <label style="font-size: 0.75rem; color: var(--text-sub);">Nhập số lượng mua:</label>
+                        <input type="number" id="qty-dash-${p.id}" value="1" min="1" 
+                            style="width: 100%; padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--glass-border); outline: none; margin-top: 5px; font-weight: 600;">
+                    </div>`;
+                
+                // Gọi hàm đếm dữ liệu ngay sau khi render
+                updateStockUI(p.id, p.name);
+
+            } else {
+                const firstPrice = p.options ? p.options[0].price : "0đ";
+                priceLabel = `<span id="price-dash-${p.id}">${firstPrice}</span>`;
+                actionArea = `
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-size: 0.75rem; color: var(--text-sub);">Chọn gói dịch vụ:</label>
+                        <select id="select-${p.id}" onchange="updateDashPrice(this, '${p.id}')" style="width: 100%; padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--glass-border); outline: none; margin-top: 5px; cursor: pointer;">
+                            ${p.options ? p.options.map(opt => `<option value="${opt.price}">${opt.label} - ${opt.price}</option>`).join('') : ''}
                         </select>
                     </div>`;
             }
 
             html += `
-                <div class="p-card" id="card-${p.id}">
-                    <img src="${p.img}" class="p-img">
-                    <div style="position:absolute; top:20px; right:20px; background:var(--primary); color:#fff; padding:5px 12px; border-radius:50px; font-size:0.7rem; font-weight:800;">
-                        <span id="price-dash-${p.id}">${p.options ? p.options[0].price : p.price}</span>
+                <div class="p-card">
+                    <div style="position:relative; width:100%;">
+                        <img src="${p.img}" class="p-img">
+                        <div style="position:absolute; top:10px; right:10px; background:var(--primary); color:#fff; padding:5px 12px; border-radius:50px; font-size:0.7rem; font-weight:800; z-index:10; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                            ${priceLabel}
+                        </div>
                     </div>
                     <h3>${p.name}</h3>
+                    ${stockStats}
                     <p style="color:var(--text-sub); font-size:0.9rem; margin-bottom:15px; min-height:40px;">${p.desc}</p>
-                    ${optionsHtml}
-                    <button id="btn-buy-${p.id}" onclick="payProduct('${p.id}', '${userEmail}', '${safeEmail}')" class="btn-lnd btn-primary">MUA NGAY</button>
-                    <div id="key-res-${p.id}"></div>
+                    ${actionArea}
+                    <button id="btn-buy-${p.id}" onclick="payProduct('${p.id}', '${userEmail}', '${safeEmail}', ${p.isClone ? 'true' : 'false'})" class="btn-lnd btn-primary">MUA NGAY</button>
                 </div>`;
         });
         container.innerHTML = html;
         reveal();
+    }
+
+    // --- HÀM CẬP NHẬT SỐ LƯỢNG KHO VÀ ĐÃ BÁN ---
+    function updateStockUI(productId, productName) {
+        // Đếm hàng còn lại (Đường dẫn Stock/1)
+        database.ref('Stock/1').on('value', (snapshot) => {
+            const count = snapshot.exists() ? Object.keys(snapshot.val()).length : 0;
+            const element = document.getElementById(`stock-count-${productId}`);
+            if(element) element.innerText = count;
+        });
+
+        // Đếm đã bán (Quét trong Orders)
+        database.ref('Orders').on('value', (snapshot) => {
+            let soldCount = 0;
+            if(snapshot.exists()) {
+                const orders = snapshot.val();
+                for(let key in orders) {
+                    // Nếu tên sản phẩm trong Order chứa tên sản phẩm hiện tại
+                    if(orders[key].product && orders[key].product.includes(productName)) {
+                        // Trích xuất số lượng (xN) từ chuỗi "Product Name (xN)"
+                        const match = orders[key].product.match(/\(x(\d+)\)/);
+                        soldCount += match ? parseInt(match[1]) : 1;
+                    }
+                }
+            }
+            const element = document.getElementById(`sold-count-${productId}`);
+            if(element) element.innerText = soldCount;
+        });
     }
 
     function updateDashPrice(selectElement, productId) {
@@ -262,43 +331,81 @@
         if (priceDisplay) priceDisplay.innerText = selectElement.value;
     }
     
-    async function payProduct(id, userEmail, safeEmail) {
+    async function payProduct(id, userEmail, safeEmail, isClone) {
         const product = KTIENXIOS_PRODUCTS.find(item => item.id == id);
-        const selectBox = document.getElementById(`select-${id}`);
-        const selectedPriceText = selectBox ? selectBox.value : product.price;
-        const cleanPrice = parseInt(selectedPriceText.replace(/\D/g, ''));
+        let finalPrice = 0;
+        let buyQuantity = 1;
 
-        if(!confirm(`Xác nhận thanh toán ${selectedPriceText} cho ${product.name}?`)) return;
+        if (isClone) {
+            buyQuantity = parseInt(document.getElementById(`qty-dash-${id}`).value) || 1;
+            if(buyQuantity < 1) { alert("Số lượng không hợp lệ!"); return; }
+            finalPrice = product.price * buyQuantity;
+        } else {
+            const selectBox = document.getElementById(`select-${id}`);
+            const selectedPriceText = selectBox ? selectBox.value : "0đ";
+            finalPrice = parseInt(selectedPriceText.replace(/\D/g, '')) || 0;
+        }
+
+        if(!confirm(`Xác nhận thanh toán ${finalPrice.toLocaleString()}đ cho ${product.name}?`)) return;
+
+        const btn = document.getElementById(`btn-buy-${id}`);
+        btn.disabled = true;
+        btn.innerText = "ĐANG XỬ LÝ...";
 
         try {
             const userRef = database.ref('Users/' + safeEmail);
-            const snapshot = await userRef.once('value');
-            const userData = snapshot.val();
+            const userSnap = await userRef.once('value');
+            const userData = userSnap.val();
 
-            if (!userData || (userData.balance || 0) < cleanPrice) {
-                alert("❌ Số dư không đủ! Vui lòng nạp thêm.");
+            if (!userData || (userData.balance || 0) < finalPrice) {
+                alert("❌ Số dư không đủ!");
+                btn.disabled = false; btn.innerText = "MUA NGAY";
                 return;
             }
 
-            const newBalance = userData.balance - cleanPrice;
-            await userRef.update({ balance: newBalance });
+            let resultData = ""; 
 
-            const generatedKey = "KTX-" + Math.random().toString(36).substring(2, 12).toUpperCase();
+            if (isClone) {
+                const stockRef = database.ref('Stock/1');
+                const stockSnap = await stockRef.limitToFirst(buyQuantity).once('value');
+                const stockData = stockSnap.val();
+
+                if (!stockData || Object.keys(stockData).length < buyQuantity) {
+                    alert("❌ Hết hàng trong kho hoặc không đủ số lượng!");
+                    btn.disabled = false; btn.innerText = "MUA NGAY";
+                    return;
+                }
+
+                const accounts = [];
+                for (const key in stockData) {
+                    accounts.push(stockData[key]);
+                    await database.ref(`Stock/1/${key}`).remove(); 
+                }
+                resultData = accounts.join(' | '); 
+            } else {
+                resultData = "KTX-" + Math.random().toString(36).substring(2, 12).toUpperCase();
+            }
+
+            const newBalance = userData.balance - finalPrice;
+            await userRef.update({ balance: newBalance });
 
             await database.ref('Orders').push({
                 user: userEmail,
-                product: product.name,
-                price: cleanPrice,
-                key: generatedKey,
+                product: product.name + (isClone ? ` (x${buyQuantity})` : ''),
+                price: finalPrice,
+                key: resultData, 
                 date: new Date().toLocaleString('vi-VN'),
-                type: 'buy_key'
+                type: isClone ? 'buy_clone' : 'buy_key'
             });
 
-            alert("✅ Giao dịch thành công! Vui lòng kiểm tra Key tại trang Lịch sử.");
+            alert("✅ Thành công! Đã lấy tài khoản từ kho.");
             window.location.href = "lichsu.html";
 
         } catch (e) {
-            alert("Lỗi: " + e.message);
+            console.error(e);
+            alert("Lỗi hệ thống: " + e.message);
+            btn.disabled = false;
+            btn.innerText = "MUA NGAY";
         }
     }
 
@@ -314,77 +421,83 @@
         document.getElementById('overlay').classList.toggle('active');
     }
 
-// --- LOGIC NHẠC TỰ ĐỘNG KHI CHẠM ---
-const audio = document.getElementById("myAudio");
-const musicBtn = document.getElementById("musicBtn");
-const musicContainer = document.getElementById("musicContainer");
+    const audio = document.getElementById("myAudio");
+    const musicBtn = document.getElementById("musicBtn");
+    const musicContainer = document.getElementById("musicContainer");
 
-// 1. Cấu hình nguồn nhạc từ products.js
-if (typeof KTIENXIOS_CONFIG !== 'undefined') {
-    const musicSource = audio.querySelector('source');
-    musicSource.src = KTIENXIOS_CONFIG.musicUrl;
-    audio.load();
-    
-    const titleDisplay = document.querySelector('.music-info div');
-    if (titleDisplay) titleDisplay.innerText = KTIENXIOS_CONFIG.musicTitle;
-}
-
-// 2. Hàm cập nhật giao diện
-function updateMusicUI(isPlaying) {
-    if (isPlaying) {
-        musicBtn.classList.add('playing');
-        musicBtn.innerHTML = '<i class="fas fa-pause"></i>';
-        if(musicContainer) musicContainer.classList.add('active');
-    } else {
-        musicBtn.classList.remove('playing');
-        musicBtn.innerHTML = '<i class="fas fa-music"></i>';
-        if(musicContainer) musicContainer.classList.remove('active');
+    if (typeof KTIENXIOS_CONFIG !== 'undefined') {
+        const musicSource = audio.querySelector('source');
+        musicSource.src = KTIENXIOS_CONFIG.musicUrl;
+        audio.load();
+        const titleDisplay = document.getElementById('musicTitleDisplay');
+        if (titleDisplay) titleDisplay.innerText = KTIENXIOS_CONFIG.musicTitle;
     }
-}
 
-// 3. Hàm xử lý phát nhạc (Fix lỗi trình duyệt chặn)
-function playMusic() {
-    audio.play().then(() => {
-        localStorage.setItem('musicPlaying', 'true');
-        updateMusicUI(true);
-        // Sau khi đã phát thành công, gỡ bỏ sự kiện lắng nghe để tránh phát lại khi chạm tiếp
-        document.removeEventListener('click', playMusic);
-        document.removeEventListener('touchstart', playMusic);
-    }).catch(err => console.log("Trình duyệt chờ tương tác..."));
-}
-
-// 4. Lắng nghe tương tác đầu tiên trên màn hình để mở nhạc
-if (localStorage.getItem('musicPlaying') !== 'false') {
-    document.addEventListener('click', playMusic);
-    document.addEventListener('touchstart', playMusic);
-}
-
-// 5. Nút bấm thủ công (Bật/Tắt)
-function toggleMusic() {
-    if (audio.paused) {
-        audio.play();
-        localStorage.setItem('musicPlaying', 'true');
-        updateMusicUI(true);
-    } else {
-        audio.pause();
-        localStorage.setItem('musicPlaying', 'false');
-        updateMusicUI(false);
+    function updateMusicUI(isPlaying) {
+        if (isPlaying) {
+            musicBtn.classList.add('playing');
+            musicBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            if(musicContainer) musicContainer.classList.add('active');
+        } else {
+            musicBtn.classList.remove('playing');
+            musicBtn.innerHTML = '<i class="fas fa-music"></i>';
+            if(musicContainer) musicContainer.classList.remove('active');
+        }
     }
-}
 
-// 6. Đồng bộ thời gian nhạc khi chuyển trang
-audio.addEventListener('timeupdate', () => {
-    localStorage.setItem('musicTime', audio.currentTime);
-});
-
-window.addEventListener('load', () => {
-    const savedTime = localStorage.getItem('musicTime');
-    const isPlaying = localStorage.getItem('musicPlaying');
-    if (savedTime) audio.currentTime = parseFloat(savedTime);
-    if (isPlaying === 'true') {
-        playMusic();
+    function playMusic() {
+        audio.play().then(() => {
+            localStorage.setItem('musicPlaying', 'true');
+            updateMusicUI(true);
+            document.removeEventListener('click', playMusic);
+            document.removeEventListener('touchstart', playMusic);
+        }).catch(err => console.log("Chờ tương tác..."));
     }
-});
+
+    if (localStorage.getItem('musicPlaying') !== 'false') {
+        document.addEventListener('click', playMusic);
+        document.addEventListener('touchstart', playMusic);
+    }
+
+    function toggleMusic() {
+        if (audio.paused) {
+            audio.play();
+            localStorage.setItem('musicPlaying', 'true');
+            updateMusicUI(true);
+        } else {
+            audio.pause();
+            localStorage.setItem('musicPlaying', 'false');
+            updateMusicUI(false);
+        }
+    }
+
+    audio.addEventListener('timeupdate', () => {
+        localStorage.setItem('musicTime', audio.currentTime);
+        if (audio.duration) {
+            const progress = (audio.currentTime / audio.duration) * 100;
+            const bar = document.getElementById('progressBar');
+            if(bar) bar.style.width = progress + "%";
+            const curr = formatTime(audio.currentTime);
+            const dur = formatTime(audio.duration);
+            document.getElementById('currTime').innerText = curr;
+            document.getElementById('durTime').innerText = dur;
+        }
+    });
+
+    function formatTime(seconds) {
+        const min = Math.floor(seconds / 60);
+        const sec = Math.floor(seconds % 60);
+        return min + ":" + (sec < 10 ? "0" + sec : sec);
+    }
+
+    window.addEventListener('load', () => {
+        const savedTime = localStorage.getItem('musicTime');
+        const isPlaying = localStorage.getItem('musicPlaying');
+        if (savedTime) audio.currentTime = parseFloat(savedTime);
+        if (isPlaying === 'true') {
+            playMusic();
+        }
+    });
 </script>
 </body>
 </html>
