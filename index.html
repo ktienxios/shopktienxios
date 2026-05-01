@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KTIENXIOS - Shop Dịch Vụ iOS Uy Tín</title>
-    <link rel="icon" type="image/x-icon" href="https://tedexe.shop/assets/images/tedfa.png">
+    <link rel="icon" type="image/x-icon" href="https://cdn.phototourl.com/member/2026-05-01-b19a8e62-500c-415f-9502-77eecc2206c0.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
@@ -240,13 +240,26 @@
         
         let html = '';
         KTIENXIOS_PRODUCTS.forEach(p => {
-            let optionsHtml = '';
-            if (p.options && p.options.length > 0) {
-                optionsHtml = `
+            let actionArea = '';
+            let priceLabel = '';
+
+            // KIỂM TRA NẾU LÀ ACC CLONE (Dựa trên flag isClone trong products.js)
+            if (p.isClone) {
+                priceLabel = `${p.price.toLocaleString()}đ / 1 ACC`;
+                actionArea = `
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-size: 0.8rem; color: var(--text-sub);">Nhập số acc bạn muốn mua:</label>
+                        <input type="number" id="qty-${p.id}" value="1" min="1" 
+                            style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--glass-border); outline: none; margin-top: 5px; font-weight: 600;">
+                    </div>`;
+            } else {
+                // NẾU LÀ DỊCH VỤ BYPASS (Sử dụng options)
+                priceLabel = `<span id="price-${p.id}">${p.options ? p.options[0].price : p.price}</span>`;
+                actionArea = `
                     <div style="margin-bottom: 15px;">
                         <label style="font-size: 0.8rem; color: var(--text-sub);">Chọn gói dịch vụ:</label>
-                        <select onchange="updatePrice(this, '${p.id}')" style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--glass-border); outline: none; margin-top: 5px; cursor: pointer;">
-                            ${p.options.map(opt => `<option value="${opt.price}">${opt.label}</option>`).join('')}
+                        <select onchange="updatePrice(this, '${p.id}')" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--glass-border); outline: none; margin-top: 5px; cursor: pointer;">
+                            ${p.options ? p.options.map(opt => `<option value="${opt.price}">${opt.label}</option>`).join('') : ''}
                         </select>
                     </div>`;
             }
@@ -254,18 +267,29 @@
             html += `
                 <div class="p-card reveal">
                     <img src="${p.img}" class="p-img">
-                    ${p.hot ? '<div style="position:absolute; top:20px; right:20px; background:var(--primary); color:#fff; padding:5px 12px; border-radius:50px; font-size:0.7rem; font-weight:800;">HOT</div>' : ''}
+                    ${p.hot ? '<div style="position:absolute; top:20px; right:20px; background:var(--primary); color:#fff; padding:5px 12px; border-radius:50px; font-size:0.7rem; font-weight:800; z-index:10;">HOT</div>' : ''}
                     <h3>${p.name}</h3>
-                    <p style="color:var(--text-sub); font-size:0.95rem; margin-bottom:15px;">${p.desc}</p>
-                    ${optionsHtml}
-                    <div style="font-weight:800; color:var(--primary); margin-bottom:15px; font-size: 1.2rem;">
-                        Giá: <span id="price-${p.id}">${p.options ? p.options[0].price : p.price}</span>
+                    <p style="color:var(--text-sub); font-size:0.95rem; margin-bottom:15px; min-height: 40px;">${p.desc}</p>
+                    ${actionArea}
+                    <div style="font-weight:800; color:var(--primary); margin-bottom:15px; font-size: 1.25rem;">
+                        Giá: ${priceLabel}
                     </div>
-                    <button onclick="openAuth('login')" class="btn-lnd btn-primary" style="width:100%;">MUA NGAY</button>
+                    <button onclick="handleBuyClick('${p.id}', ${p.isClone ? 'true' : 'false'})" class="btn-lnd btn-primary" style="width:100%;">MUA NGAY</button>
                 </div>`;
         });
         container.innerHTML = html;
         setTimeout(reveal, 100);
+    }
+
+    // Hàm xử lý nút MUA NGAY
+    function handleBuyClick(productId, isClone) {
+        if (isClone) {
+            const quantity = document.getElementById(`qty-${productId}`).value;
+            // Ở đây ông có thể chuyển hướng sang trang thanh toán hoặc login kèm số lượng
+            window.location.href = `login.html?action=buy&id=${productId}&qty=${quantity}`;
+        } else {
+            openAuth('login');
+        }
     }
 
     function updatePrice(selectElement, productId) {
@@ -303,20 +327,15 @@
         }
     }
 
-    // Hàm "kích nổ" nhạc khi có bất kỳ tương tác nào
     function triggerMusic() {
-        if (!audio.paused) return; // Nếu đang chạy rồi thì bỏ qua
-        
+        if (!audio.paused) return;
         audio.play().then(() => {
             localStorage.setItem('musicPlaying', 'true');
             updateMusicUI(true);
-            // Gỡ bỏ các sự kiện sau khi thành công
             ['click', 'touchstart', 'mousedown', 'pointerdown', 'scroll'].forEach(e => 
                 document.removeEventListener(e, triggerMusic)
             );
-        }).catch(() => {
-            console.log("Browser waiting for more interaction...");
-        });
+        }).catch(() => {});
     }
 
     function toggleMusic() {
@@ -333,15 +352,12 @@
 
     // --- 4. KÍCH HOẠT HỆ THỐNG KHI LOAD XONG ---
     window.addEventListener('load', () => {
-        // Khởi tạo sản phẩm và nhạc
         renderHomeProducts();
         initMusicConfig();
 
-        // Khôi phục vị trí nhạc
         const savedTime = localStorage.getItem('musicTime');
         if (savedTime) audio.currentTime = parseFloat(savedTime);
         
-        // Đăng ký lắng nghe tương tác để phát nhạc
         if (localStorage.getItem('musicPlaying') !== 'false') {
             ['click', 'touchstart', 'mousedown', 'pointerdown', 'scroll'].forEach(e => 
                 document.addEventListener(e, triggerMusic, { once: false })
@@ -351,9 +367,10 @@
 
     audio.addEventListener('timeupdate', () => {
         localStorage.setItem('musicTime', audio.currentTime);
-        // Cập nhật thanh tiến trình nếu ông muốn (option)
-        const progress = (audio.currentTime / audio.duration) * 100;
-        document.getElementById('progressBar').style.width = progress + "%";
+        if (audio.duration) {
+            const progress = (audio.currentTime / audio.duration) * 100;
+            document.getElementById('progressBar').style.width = progress + "%";
+        }
     });
 </script>
 </body>
