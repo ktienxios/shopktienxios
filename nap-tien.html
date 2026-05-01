@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nạp Tiền - KTIENXIOS System</title>
+    <link rel="icon" type="image/x-icon" href="https://tedexe.shop/assets/images/tedfa.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+        --primary: #06b6d4; --secondary: #3b82f6; --dark-bg: #020617; 
+        --card-bg: rgba(30, 41, 59, 0.5); --glass-border: rgba(255, 255, 255, 0.08);
+        --text-main: #f8fafc; --text-sub: #94a3b8;
+    }
+
+    body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background-color: var(--dark-bg); color: var(--text-main);
+        background-image: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 50%);
+        min-height: 100vh; line-height: 1.6; padding-bottom: 50px;
+    }
+
+    .container { max-width: 500px; margin: 0 auto; padding: 20px; }
+
+    /* Header */
+    .header { text-align: center; margin-bottom: 30px; padding-top: 20px; }
+    .header-icon { 
+        width: 60px; height: 60px; background: linear-gradient(135deg, #6366f1, #a855f7);
+        border-radius: 18px; display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 15px; font-size: 24px; box-shadow: 0 10px 20px rgba(168, 85, 247, 0.3);
+    }
+    .header h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 5px; }
+    .status-badge {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: rgba(16, 185, 129, 0.1); color: #10b981;
+        padding: 6px 16px; border-radius: 50px; font-size: 0.85rem; font-weight: 700;
+        border: 1px solid rgba(16, 185, 129, 0.2); margin-top: 10px;
+    }
+
+    /* Section Wrapper */
+    .section-card {
+        background: var(--card-bg); border: 1px solid var(--glass-border);
+        border-radius: 24px; padding: 25px; margin-bottom: 20px; backdrop-filter: blur(10px);
+    }
+
+    /* QR Area */
+    .qr-container { text-align: center; margin-bottom: 10px; }
+    .qr-box {
+        background: #fff; padding: 15px; border-radius: 20px; display: inline-block;
+        margin-bottom: 15px; width: 100%; max-width: 280px;
+    }
+    .qr-box img { width: 100%; border-radius: 10px; }
+    .timer { color: #f59e0b; font-weight: 700; font-size: 0.9rem; }
+
+    /* Info Blocks */
+    .info-item {
+        display: flex; align-items: center; gap: 15px; padding: 15px;
+        background: rgba(255, 255, 255, 0.03); border-radius: 18px;
+        margin-bottom: 12px; border: 1px solid var(--glass-border);
+    }
+    .info-icon {
+        width: 45px; height: 45px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center; font-size: 18px;
+        flex-shrink: 0;
+    }
+    .info-content { flex: 1; }
+    .info-label { font-size: 0.7rem; color: var(--text-sub); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+    .info-value { font-size: 1rem; font-weight: 700; color: #fff; }
+    .copy-btn {
+        width: 35px; height: 35px; border-radius: 10px; border: none;
+        background: rgba(59, 130, 246, 0.1); color: var(--secondary);
+        cursor: pointer; transition: 0.3s;
+    }
+    .copy-btn:active { transform: scale(0.9); }
+
+    /* Nạp nhanh */
+    .price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+    .price-item {
+        background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border);
+        padding: 15px; border-radius: 15px; text-align: center; cursor: pointer; transition: 0.3s;
+    }
+    .price-item:hover { border-color: var(--primary); background: rgba(6, 182, 212, 0.05); }
+    .price-item i { display: block; margin-bottom: 5px; color: var(--secondary); font-size: 1.1rem; }
+    .price-item span { font-weight: 800; font-size: 0.95rem; }
+
+    /* Hướng dẫn */
+    .steps { list-style: none; padding: 0; }
+    .steps li {
+        display: flex; gap: 12px; margin-bottom: 15px; font-size: 0.9rem; color: var(--text-sub);
+    }
+    .step-num {
+        width: 22px; height: 22px; background: rgba(255,255,255,0.1);
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-size: 0.75rem; color: #fff; flex-shrink: 0; margin-top: 2px;
+    }
+
+    .warning-box {
+        background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2);
+        padding: 15px; border-radius: 15px; color: #f59e0b; display: flex; gap: 12px; font-size: 0.85rem;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-icon"><i class="fas fa-wallet"></i></div>
+        <h1>Nạp tiền QR Code</h1>
+        <p style="color: var(--text-sub); font-size: 0.9rem;">Quét mã QR để thanh toán nhanh chóng</p>
+        <div class="status-badge">
+            <i class="fas fa-clock"></i> Số dư hiện tại: 0đ
+        </div>
+    </header>
+
+    <!-- QR Section -->
+    <div class="section-card">
+        <div class="qr-container">
+            <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 15px;">
+                <span style="color: #ef4444; font-weight: 800;">Viet<span style="color: #3b82f6;">QR</span></span>
+                <span style="width: 6px; height: 6px; background: #f59e0b; border-radius: 50%;"></span>
+                <span class="timer">Đang chờ thanh toán (1m 10s)</span>
+            </div>
+            <div class="qr-box">
+                <!-- Mã QR tự động điền nội dung -->
+                <img src="https://img.vietqr.io/image/MB-0916891554-compact2.jpg?amount=0&addInfo=NAP2818&accountName=LE%20NGUYEN%20CHIEN%20THANG" alt="QR Code">
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-sub);">Hệ thống cộng tiền tự động sau 1-5 phút</p>
+        </div>
+    </div>
+
+    <!-- Bank Info Section -->
+    <div class="section-card">
+        <!-- Ngân hàng -->
+        <div class="info-item">
+            <div class="info-icon" style="background: linear-gradient(135deg, #818cf8, #6366f1);"><i class="fas fa-university"></i></div>
+            <div class="info-content">
+                <div class="info-label">Ngân hàng</div>
+                <div class="info-value">MB Bank - Quân Đội</div>
+            </div>
+        </div>
+
+        <!-- STK -->
+        <div class="info-item">
+            <div class="info-icon" style="background: linear-gradient(135deg, #f472b6, #db2777);"><i class="fas fa-credit-card"></i></div>
+            <div class="info-content">
+                <div class="info-label">Số tài khoản</div>
+                <div class="info-value" id="stk">0916891554</div>
+            </div>
+            <button class="copy-btn" onclick="copyText('stk')"><i class="fas fa-copy"></i></button>
+        </div>
+
+        <!-- Chủ TK -->
+        <div class="info-item">
+            <div class="info-icon" style="background: linear-gradient(135deg, #38bdf8, #0284c7);"><i class="fas fa-user"></i></div>
+            <div class="info-content">
+                <div class="info-label">Chủ tài khoản</div>
+                <div class="info-value">LE NGUYEN CHIEN THANG</div>
+            </div>
+        </div>
+
+        <!-- Nội dung -->
+        <div class="info-item" style="border: 1px solid rgba(244, 114, 182, 0.3);">
+            <div class="info-icon" style="background: linear-gradient(135deg, #fb923c, #ea580c);"><i class="fas fa-comment-dots"></i></div>
+            <div class="info-content">
+                <div class="info-label">Nội dung chuyển khoản</div>
+                <div class="info-value" id="noidung" style="color: #fb7185;">NAP2818</div>
+            </div>
+            <button class="copy-btn" onclick="copyText('noidung')"><i class="fas fa-copy"></i></button>
+        </div>
+
+        <div class="warning-box">
+            <i class="fas fa-exclamation-triangle" style="margin-top: 3px;"></i>
+            <span>Vui lòng chuyển khoản đúng nội dung để được cộng tiền tự động.</span>
+        </div>
+    </div>
+
+    <!-- Chọn số tiền nạp Section -->
+    <div class="section-card">
+        <h3 style="font-size: 1.1rem; margin-bottom: 5px;"><i class="fas fa-coins" style="color: #fbbf24;"></i> Chọn số tiền nạp</h3>
+        <div class="price-grid">
+            <div class="price-item"><i class="fas fa-star"></i><span>50.000đ</span></div>
+            <div class="price-item"><i class="fas fa-bolt"></i><span>100.000đ</span></div>
+            <div class="price-item"><i class="fas fa-layer-group"></i><span>200.000đ</span></div>
+            <div class="price-item"><i class="fas fa-briefcase"></i><span>500.000đ</span></div>
+        </div>
+    </div>
+
+    <!-- Hướng dẫn -->
+    <div class="section-card">
+        <h3 style="margin-bottom: 20px;">Hướng dẫn thanh toán</h3>
+        <ul class="steps">
+            <li><div class="step-num">1</div> Mở App Banking trên điện thoại</li>
+            <li><div class="step-num">2</div> Chọn chức năng quét mã QR</li>
+            <li><div class="step-num">3</div> Quét mã QR ở phía trên</li>
+            <li><div class="step-num">4</div> Kiểm tra thông tin và xác nhận</li>
+            <li><div class="step-num">5</div> Tiền sẽ tự động cộng sau 1-5 phút</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    function copyText(id) {
+        const text = document.getElementById(id).innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Đã sao chép: " + text);
+        });
+    }
+</script>
+
+</body>
+</html>
