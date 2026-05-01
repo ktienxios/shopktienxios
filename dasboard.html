@@ -108,9 +108,9 @@
         </div>
 
         <nav>
-            <a href="#" class="menu-link"><i class="fas fa-wallet"></i> Nạp Tiền Bank</a>
-            <a href="#" class="menu-link"><i class="fas fa-shopping-cart"></i> Mua Sản Phẩm</a>
-            <a href="#" class="menu-link"><i class="fas fa-history"></i> Lịch Sử Mua</a>
+            <a href="nap-tien.html" class="menu-link"><i class="fas fa-wallet"></i> Nạp Tiền Bank</a>
+            <a href="#dashboardProductList" class="menu-link" onclick="toggleSidebar()"><i class="fas fa-shopping-cart"></i> Mua Sản Phẩm</a>
+            <a href="lichsu.html" class="menu-link"><i class="fas fa-history"></i> Lịch Sử Mua</a>
             <a href="index.html" class="menu-link" style="margin-top: 50px; color: #ef4444;"><i class="fas fa-sign-out-alt"></i> Đăng Xuất</a>
         </nav>
     </div>
@@ -150,30 +150,60 @@
         document.getElementById('overlay').classList.toggle('active');
     }
 
-    // 3. Render sản phẩm cho Dashboard
+    // 3. Render sản phẩm cho Dashboard (Bản nâng cấp chọn gói)
     function renderDashboardProducts() {
         const container = document.getElementById('dashboardProductList'); 
         if(!container || typeof KTIENXIOS_PRODUCTS === 'undefined') return;
 
         let html = '';
         KTIENXIOS_PRODUCTS.forEach(p => {
+            // Tạo select box chọn gói
+            let optionsHtml = '';
+            if (p.options && p.options.length > 0) {
+                optionsHtml = `
+                    <div style="margin-bottom: 15px;">
+                        <select id="select-${p.id}" onchange="updateDashPrice(this, '${p.id}')" style="width: 100%; padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--glass-border); outline: none; cursor: pointer;">
+                            ${p.options.map(opt => `<option value="${opt.price}">${opt.label} - ${opt.price}</option>`).join('')}
+                        </select>
+                    </div>`;
+            }
+
             html += `
                 <div class="p-card">
                     <img src="${p.img}" class="p-img">
-                    <div style="position:absolute; top:20px; right:20px; background:var(--primary); color:#fff; padding:5px 12px; border-radius:50px; font-size:0.7rem; font-weight:800;">${p.price}</div>
+                    <div style="position:absolute; top:20px; right:20px; background:var(--primary); color:#fff; padding:5px 12px; border-radius:50px; font-size:0.7rem; font-weight:800;">
+                        <span id="price-dash-${p.id}">${p.options ? p.options[0].price : p.price}</span>
+                    </div>
                     <h3>${p.name}</h3>
                     <p style="color:var(--text-sub); font-size:0.9rem; margin-bottom:15px; min-height:40px;">${p.desc}</p>
-                    <button onclick="payProduct(${p.id})" class="btn-lnd btn-primary">MUA NGAY</button>
+                    
+                    ${optionsHtml}
+
+                    <button onclick="payProduct('${p.id}')" class="btn-lnd btn-primary">MUA NGAY</button>
                 </div>`;
         });
         container.innerHTML = html;
         reveal();
     }
+
+    // Cập nhật giá hiển thị trên badge khi đổi gói
+    function updateDashPrice(selectElement, productId) {
+        const priceDisplay = document.getElementById(`price-dash-${productId}`);
+        if (priceDisplay) {
+            priceDisplay.innerText = selectElement.value;
+        }
+    }
     
     // 4. Xử lý mua hàng
     function payProduct(id) {
-        const product = KTIENXIOS_PRODUCTS.find(item => item.id === id);
-        const check = confirm(`Ông giáo có chắc muốn thanh toán ${product.price} cho ${product.name} không?`);
+        const product = KTIENXIOS_PRODUCTS.find(item => item.id == id);
+        const selectBox = document.getElementById(`select-${id}`);
+        
+        // Lấy thông tin gói đã chọn
+        const selectedPrice = selectBox ? selectBox.value : product.price;
+        const selectedLabel = selectBox ? selectBox.options[selectBox.selectedIndex].text : "Gói mặc định";
+
+        const check = confirm(`Ông giáo có chắc muốn thanh toán ${selectedPrice} cho ${product.name} (${selectedLabel}) không?`);
         if(check) {
             alert("Giao dịch thành công! Vui lòng kiểm tra lịch sử.");
         }
