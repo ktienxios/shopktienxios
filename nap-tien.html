@@ -254,19 +254,8 @@
     const BANK_ID = "BIDV";
     const ACCOUNT_NO = "0782275997";
     const ACCOUNT_NAME = "KIEU ANH TIEN";
-
-    // Tự động load số dư khi vào trang
-    auth.onAuthStateChanged(user => {
-        if (user) {
-            const safeEmail = user.email.replace(/\./g, '_');
-            database.ref('Users/' + safeEmail + '/balance').on('value', (snap) => {
-                const balance = snap.val() || 0;
-                document.getElementById('current-balance').innerText = balance.toLocaleString() + 'đ';
-            });
-        } else {
-            document.getElementById('current-balance').innerText = 'Chưa đăng nhập';
-        }
-    });
+    // Link ảnh QR của ông làm ảnh nền khi đang load
+    const DEFAULT_QR = "https://cdn.phototourl.com/member/2026-05-01-1a7989b2-845d-4978-97ab-c13f5c068c0b.jpg";
 
     function setAmount(val) {
         document.getElementById('inputAmount').value = val;
@@ -279,45 +268,49 @@
     }
 
     function generateQR() {
-        const amount = document.getElementById('inputAmount').value;
+        const amount = document.getElementById('inputAmount').value || 50000;
         const memo = generateMemo();
         document.getElementById('noidung').innerText = memo;
         
+        // Tạo link VietQR động
         const qrUrl = `https://img.vietqr.io/image/${BANK_ID}-${ACCOUNT_NO}-compact2.png?amount=${amount}&addInfo=${memo}&accountName=${encodeURIComponent(ACCOUNT_NAME)}`;
+        
         const qrImg = document.getElementById('qr-image');
-        qrImg.style.opacity = '0.3';
+        qrImg.style.opacity = '0.5'; // Làm mờ nhẹ khi đang đổi mã
         qrImg.src = qrUrl;
-        qrImg.onload = () => { qrImg.style.opacity = '1'; };
+        
+        qrImg.onload = () => { 
+            qrImg.style.opacity = '1'; 
+        };
+
+        // Nếu lỗi load API thì hiện cái ảnh backup của ông
+        qrImg.onerror = () => {
+            qrImg.src = DEFAULT_QR;
+            qrImg.style.opacity = '1';
+        };
+        
         timeLeft = 120; 
     }
 
-    // --- HÀM GỬI THÔNG BÁO CHO ADMIN ---
-    async function sendToAdmin() {
-        const amount = document.getElementById('inputAmount').value;
-        const memo = document.getElementById('noidung').innerText;
-        const user = auth.currentUser;
+    // --- QUAN TRỌNG: Gọi hàm ngay khi load trang ---
+    window.onload = () => {
+        generateQR(); // Phải có cái này QR mới hiện ngay lúc đầu
+        
+        // Check số dư
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                const safeEmail = user.email.replace(/\./g, '_');
+                database.ref('Users/' + safeEmail + '/balance').on('value', (snap) => {
+                    const balance = snap.val() || 0;
+                    document.getElementById('current-balance').innerText = balance.toLocaleString() + 'đ';
+                });
+            } else {
+                document.getElementById('current-balance').innerText = 'Chưa đăng nhập';
+            }
+        });
+    };
 
-        if (!user) {
-            alert("Vui lòng đăng nhập để thực hiện nạp tiền!");
-            return;
-        }
-
-        try {
-            // Đẩy dữ liệu vào nhánh RechargeRequests để Admin nhận được
-            await database.ref('RechargeRequests').push({
-                email: user.email,
-                amount: parseInt(amount),
-                content: memo,
-                date: new Date().toLocaleString('vi-VN'),
-                status: 'pending'
-            });
-
-            alert(`✅ Đã gửi yêu cầu nạp ${parseInt(amount).toLocaleString()}đ!\nNội dung: ${memo}\nAdmin đang kiểm tra, vui lòng đợi.`);
-        } catch (error) {
-            alert("Lỗi: " + error.message);
-        }
-    }
-
+    // Đếm ngược
     setInterval(() => {
         if (timeLeft > 0) {
             timeLeft--;
@@ -327,83 +320,92 @@
         }
     }, 1000);
 
+    async function sendToAdmin() {
+        const amount = document.getElementById('inputAmount').value;
+        const memo = document.getElementById('noidung').innerText;
+        const user = auth.currentUser;
+        if (!user) { alert("Vui lòng đăng nhập!"); return; }
+
+        try {
+            await database.ref('RechargeRequests').push({
+                email: user.email,
+                amount: parseInt(amount),
+                content: memo,
+                date: new Date().toLocaleString('vi-VN'),
+                status: 'pending'
+            });
+            alert(`✅ Đã gửi yêu cầu!\nAdmin đang check bill, đợi tí nhé.`);
+        } catch (error) {
+            alert("Lỗi: " + error.message);
+        }
+    }
+
     function copyText(id) {
         const text = document.getElementById(id).innerText;
-        navigator.clipboard.writeText(text).then(() => alert("Đã sao chép!"));
+        navigator.clipboard.writeText(text).then(() => alert("Đã copy: " + text));
     }
 
-// --- LOGIC NHẠC TỰ ĐỘNG KHI CHẠM ---
-const audio = document.getElementById("myAudio");
-const musicBtn = document.getElementById("musicBtn");
-const musicContainer = document.getElementById("musicContainer");
+    // --- LOGIC NHẠC ---
+    // --- LOGIC NHẠC (ĐÃ FIX THANH THỜI GIAN) ---
+    const audio = document.getElementById("myAudio");
+    const musicBtn = document.getElementById("musicBtn");
+    const musicContainer = document.getElementById("musicContainer");
+    const progressBar = document.getElementById("progressBar");
+    const currTime = document.getElementById("currTime");
+    const durTime = document.getElementById("durTime");
 
-// 1. Cấu hình nguồn nhạc từ products.js
-if (typeof KTIENXIOS_CONFIG !== 'undefined') {
-    const musicSource = audio.querySelector('source');
-    musicSource.src = KTIENXIOS_CONFIG.musicUrl;
-    audio.load();
-    
-    const titleDisplay = document.querySelector('.music-info div');
-    if (titleDisplay) titleDisplay.innerText = KTIENXIOS_CONFIG.musicTitle;
-}
-
-// 2. Hàm cập nhật giao diện
-function updateMusicUI(isPlaying) {
-    if (isPlaying) {
-        musicBtn.classList.add('playing');
-        musicBtn.innerHTML = '<i class="fas fa-pause"></i>';
-        if(musicContainer) musicContainer.classList.add('active');
-    } else {
-        musicBtn.classList.remove('playing');
-        musicBtn.innerHTML = '<i class="fas fa-music"></i>';
-        if(musicContainer) musicContainer.classList.remove('active');
+    // Hàm định dạng thời gian (giây -> phút:giây)
+    function formatTime(seconds) {
+        let min = Math.floor(seconds / 60);
+        let sec = Math.floor(seconds % 60);
+        return `${min}:${sec < 10 ? '0' + sec : sec}`;
     }
-}
 
-// 3. Hàm xử lý phát nhạc (Fix lỗi trình duyệt chặn)
-function playMusic() {
-    audio.play().then(() => {
-        localStorage.setItem('musicPlaying', 'true');
-        updateMusicUI(true);
-        // Sau khi đã phát thành công, gỡ bỏ sự kiện lắng nghe để tránh phát lại khi chạm tiếp
-        document.removeEventListener('click', playMusic);
-        document.removeEventListener('touchstart', playMusic);
-    }).catch(err => console.log("Trình duyệt chờ tương tác..."));
-}
-
-// 4. Lắng nghe tương tác đầu tiên trên màn hình để mở nhạc
-if (localStorage.getItem('musicPlaying') !== 'false') {
-    document.addEventListener('click', playMusic);
-    document.addEventListener('touchstart', playMusic);
-}
-
-// 5. Nút bấm thủ công (Bật/Tắt)
-function toggleMusic() {
-    if (audio.paused) {
-        audio.play();
-        localStorage.setItem('musicPlaying', 'true');
-        updateMusicUI(true);
-    } else {
-        audio.pause();
-        localStorage.setItem('musicPlaying', 'false');
-        updateMusicUI(false);
+    function toggleMusic() {
+        if (audio.paused) {
+            audio.play();
+            musicBtn.classList.add('playing');
+            musicContainer.classList.add('active');
+        } else {
+            audio.pause();
+            musicBtn.classList.remove('playing');
+            musicContainer.classList.remove('active');
+        }
     }
-}
 
-// 6. Đồng bộ thời gian nhạc khi chuyển trang
-audio.addEventListener('timeupdate', () => {
-    localStorage.setItem('musicTime', audio.currentTime);
-});
+    // Cập nhật thanh tiến trình và thời gian liên tục
+    audio.addEventListener('timeupdate', () => {
+        // 1. Cập nhật thanh Bar
+        const progress = (audio.currentTime / audio.duration) * 100;
+        progressBar.style.width = `${progress}%`;
 
-window.addEventListener('load', () => {
-    const savedTime = localStorage.getItem('musicTime');
-    const isPlaying = localStorage.getItem('musicPlaying');
-    if (savedTime) audio.currentTime = parseFloat(savedTime);
-    if (isPlaying === 'true') {
-        playMusic();
-    }
-});
+        // 2. Cập nhật số phút đang chạy
+        currTime.innerText = formatTime(audio.currentTime);
+        
+        // 3. Lưu lại thời gian để chuyển trang không bị mất
+        localStorage.setItem('musicTime', audio.currentTime);
+    });
+
+    // Khi nhạc load xong dữ liệu thì hiện tổng thời gian
+    audio.addEventListener('loadedmetadata', () => {
+        durTime.innerText = formatTime(audio.duration);
+    });
+
+    // Tự động nổ nhạc khi chạm màn hình (Fix chính sách trình duyệt)
+    document.addEventListener('click', () => {
+        if(audio.paused) {
+            audio.play().then(() => {
+                musicBtn.classList.add('playing');
+                musicContainer.classList.add('active');
+            }).catch(()=>{});
+        }
+    }, { once: true });
+
+    // Khôi phục trạng thái khi load lại trang
+    window.addEventListener('load', () => {
+        const savedTime = localStorage.getItem('musicTime');
+        if (savedTime) audio.currentTime = parseFloat(savedTime);
+    });
 </script>
-
 </body>
 </html>
