@@ -111,30 +111,38 @@
     }
     .p-img { width: 100%; height: 220px; object-fit: cover; border-radius: 16px; margin-bottom: 20px; }
 
-    /* --- MODAL AUTH --- */
-    .auth-modal {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2000;
-        background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px);
-        display: none; align-items: center; justify-content: center; padding: 20px;
+    /* --- NÂNG CẤP MUSIC PLAYER --- */
+    .music-player {
+        position: fixed; bottom: 30px; right: 30px; z-index: 999;
+        display: flex; align-items: center; gap: 15px;
+        background: rgba(15, 23, 42, 0.8);
+        padding: 8px 15px; border-radius: 50px;
+        border: 1px solid var(--glass-border);
+        backdrop-filter: blur(10px);
+        transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    .auth-modal.active { display: flex; animation: slide-up 0.4s ease; }
-    .auth-card {
-        background: #0f172a; border: 1px solid var(--glass-border);
-        width: 100%; max-width: 400px; padding: 40px; border-radius: 28px; position: relative;
+    .music-info {
+        width: 0; overflow: hidden; opacity: 0;
+        transition: 0.5s; display: flex; flex-direction: column; gap: 4px;
     }
-    .auth-input {
-        width: 100%; padding: 15px; background: rgba(255,255,255,0.03); 
-        border: 1px solid var(--glass-border); border-radius: 12px; color: #fff; margin-bottom: 15px; outline: none;
-    }
-
-    /* --- MUSIC BUTTON --- */
-    .music-player { position: fixed; bottom: 30px; right: 30px; z-index: 999; }
+    .music-player.active .music-info { width: 150px; opacity: 1; }
     .music-btn {
-        width: 55px; height: 55px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary));
-        color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
-        font-size: 1.2rem; transition: 0.3s;
+        width: 45px; height: 45px; border-radius: 50%; 
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white; border: none; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0; transition: 0.3s;
     }
     .playing { animation: pulse-glow 2s infinite; }
+    .progress-container {
+        width: 100%; height: 4px; background: rgba(255,255,255,0.1);
+        border-radius: 10px; cursor: pointer; position: relative;
+    }
+    .progress-bar {
+        height: 100%; background: var(--primary); width: 0%;
+        border-radius: 10px; position: relative;
+    }
+    .time-display { font-size: 10px; color: var(--text-sub); display: flex; justify-content: space-between; }
 
     .reveal { opacity: 0; transform: translateY(40px); transition: 0.8s ease-out; }
     .reveal.active { opacity: 1; transform: translateY(0); }
@@ -183,41 +191,27 @@
             <div style="width:80px; height:4px; background:var(--primary); margin: 0 auto; border-radius:10px;"></div>
         </div>
         
-        <!-- THÀNH PHẦN QUAN TRỌNG: Nơi đổ hàng từ products.js -->
         <div class="product-grid" id="productContainer"></div>
     </section>
 
-    <!-- Modal Auth -->
-    <div class="auth-modal" id="authModal">
-        <div class="auth-card" id="loginForm">
-            <i class="fas fa-times" onclick="closeAuth()" style="position:absolute; top:25px; right:25px; color:var(--text-sub); cursor:pointer;"></i>
-            <h2 style="margin-bottom:30px; text-align:center;">Đăng Nhập</h2>
-            <input type="text" class="auth-input" placeholder="Tên đăng nhập">
-            <input type="password" class="auth-input" placeholder="Mật khẩu">
-            <button class="btn-lnd btn-primary" style="width:100%; margin-top:10px;">ĐĂNG NHẬP NGAY</button>
-            <p style="text-align:center; margin-top:25px; color:var(--text-sub); font-size:0.9rem;">
-                Chưa có tài khoản? <span onclick="openAuth('register')" style="color:var(--primary); cursor:pointer; font-weight:700;">Đăng ký</span>
-            </p>
+    <!-- Nâng cấp cấu trúc Music Player -->
+    <div class="music-player" id="musicContainer">
+        <div class="music-info">
+            <div style="font-size: 11px; font-weight: 700; white-space: nowrap;">BGM - KTIENXIOS</div>
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="time-display">
+                <span id="currTime">0:00</span>
+                <span id="durTime">0:00</span>
+            </div>
         </div>
-
-        <div class="auth-card" id="registerForm" style="display:none;">
-            <i class="fas fa-times" onclick="closeAuth()" style="position:absolute; top:25px; right:25px; color:var(--text-sub); cursor:pointer;"></i>
-            <h2 style="margin-bottom:30px; text-align:center;">Đăng Ký</h2>
-            <input type="text" class="auth-input" placeholder="Username">
-            <input type="email" class="auth-input" placeholder="Email liên hệ">
-            <input type="password" class="auth-input" placeholder="Mật khẩu">
-            <button class="btn-lnd btn-primary" style="width:100%; margin-top:10px;">TẠO TÀI KHOẢN</button>
-            <p style="text-align:center; margin-top:25px; color:var(--text-sub); font-size:0.9rem;">
-                Đã có tài khoản? <span onclick="openAuth('login')" style="color:var(--primary); cursor:pointer; font-weight:700;">Đăng nhập</span>
-            </p>
-        </div>
-    </div>
-
-    <div class="music-player">
         <audio id="myAudio" loop>
-            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+            <source src="https://scared-aquamarine-wzjsbpfpzz.edgeone.app/snaptt.me-48765111.mp3" type="audio/mpeg">
         </audio>
-        <button class="music-btn" onclick="toggleMusic()" id="musicBtn"><i class="fas fa-music"></i></button>
+        <button class="music-btn" onclick="toggleMusic()" id="musicBtn">
+            <i class="fas fa-music"></i>
+        </button>
     </div>
 
     <footer style="padding:60px 0; text-align:center; border-top:1px solid var(--glass-border); background: rgba(1, 2, 6, 0.5);">
@@ -231,7 +225,7 @@
 <script src="products.js"></script>
 
 <script>
-    // 1. Hiệu ứng cuộn trang
+    // 1. Hiệu ứng cuộn trang (Reveal)
     function reveal() {
         document.querySelectorAll(".reveal").forEach(r => {
             if (r.getBoundingClientRect().top < window.innerHeight - 80) r.classList.add("active");
@@ -257,49 +251,83 @@
                 </div>`;
         });
         container.innerHTML = html;
-        reveal(); // Chạy lại reveal để hiện hàng ra mượt mà
+        reveal();
     }
 
-    // Chạy khi trang load xong
-    window.addEventListener('load', () => {
-        renderHomeProducts();
-        reveal();
-    });
-
-    // 3. Xử lý Modal Auth
-    const modal = document.getElementById('authModal');
-    const loginForm = document.getElementById('loginForm');
-    const regForm = document.getElementById('registerForm');
-
+    // 3. Xử lý Chuyển trang (Fix Login/Signup)
     function openAuth(type) {
-        modal.classList.add('active');
         if(type === 'login') {
-            loginForm.style.display = 'block';
-            regForm.style.display = 'none';
+            window.location.href = 'login.html';
         } else {
-            loginForm.style.display = 'none';
-            regForm.style.display = 'block';
+            window.location.href = 'signup.html';
         }
     }
-    function closeAuth() { modal.classList.remove('active'); }
-    window.onclick = function(e) { if (e.target == modal) closeAuth(); }
 
-    // 4. Xử lý Music
+    // 4. Xử lý Music Player (Bản nâng cấp giữ nhạc và thanh thời gian)
     const audio = document.getElementById("myAudio");
     const musicBtn = document.getElementById("musicBtn");
-    let playing = false;
+    const musicContainer = document.getElementById("musicContainer");
+    const progressBar = document.getElementById("progressBar");
+    const progressContainer = document.getElementById("progressContainer");
+    const currTimeText = document.getElementById("currTime");
+    const durTimeText = document.getElementById("durTime");
+
+    function formatTime(seconds) {
+        let min = Math.floor(seconds / 60);
+        let sec = Math.floor(seconds % 60);
+        return `${min}:${sec < 10 ? '0' + sec : sec}`;
+    }
+
+    audio.addEventListener('timeupdate', () => {
+        const { duration, currentTime } = audio;
+        const progressPercent = (currentTime / duration) * 100;
+        progressBar.style.width = `${progressPercent}%`;
+        currTimeText.innerText = formatTime(currentTime);
+        if(duration) durTimeText.innerText = formatTime(duration);
+        localStorage.setItem('musicTime', currentTime);
+    });
+
+    progressContainer.addEventListener('click', (e) => {
+        const width = progressContainer.clientWidth;
+        const clickX = e.offsetX;
+        const duration = audio.duration;
+        audio.currentTime = (clickX / width) * duration;
+    });
+
     function toggleMusic() {
-        if (!playing) { 
-            audio.play(); 
+        if (audio.paused) { 
+            audio.play().catch(() => {
+                console.log("Cần tương tác với trang để phát nhạc");
+            }); 
             musicBtn.classList.add('playing'); 
             musicBtn.innerHTML = '<i class="fas fa-pause"></i>'; 
+            musicContainer.classList.add('active');
+            localStorage.setItem('musicPlaying', 'true');
         } else { 
             audio.pause(); 
             musicBtn.classList.remove('playing'); 
             musicBtn.innerHTML = '<i class="fas fa-music"></i>'; 
+            musicContainer.classList.remove('active');
+            localStorage.setItem('musicPlaying', 'false');
         }
-        playing = !playing;
     }
+
+    // Logic khôi phục trạng thái nhạc khi chuyển trang
+    window.addEventListener('load', () => {
+        renderHomeProducts();
+        reveal();
+
+        const savedTime = localStorage.getItem('musicTime');
+        const isPlaying = localStorage.getItem('musicPlaying');
+        if (savedTime) audio.currentTime = savedTime;
+        if (isPlaying === 'true') {
+            audio.play().then(() => {
+                musicBtn.classList.add('playing');
+                musicBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                musicContainer.classList.add('active');
+            }).catch(() => {});
+        }
+    });
 </script>
 </body>
 </html>
