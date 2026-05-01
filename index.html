@@ -206,6 +206,7 @@
                 <span id="durTime">0:00</span>
             </div>
         </div>
+        <!-- THÊM LOOP VÀO ĐÂY ĐỂ TỰ ĐỘNG LẶP -->
         <audio id="myAudio" loop>
             <source src="https://scared-aquamarine-wzjsbpfpzz.edgeone.app/snaptt.me-48765111.mp3" type="audio/mpeg">
         </audio>
@@ -240,7 +241,6 @@
         
         let html = '';
         KTIENXIOS_PRODUCTS.forEach(p => {
-            // Tạo danh sách các tùy chọn gói nếu có, nếu không mặc định dùng giá cũ
             let optionsHtml = '';
             if (p.options && p.options.length > 0) {
                 optionsHtml = `
@@ -271,7 +271,6 @@
         reveal();
     }
 
-    // Hàm cập nhật giá hiển thị khi người dùng đổi option trong select
     function updatePrice(selectElement, productId) {
         const priceDisplay = document.getElementById(`price-${productId}`);
         if (priceDisplay) {
@@ -279,7 +278,6 @@
         }
     }
 
-    // 3. Xử lý Chuyển trang (Fix Login/Signup)
     function openAuth(type) {
         if(type === 'login') {
             window.location.href = 'login.html';
@@ -288,7 +286,7 @@
         }
     }
 
-    // 4. Xử lý Music Player (Bản nâng cấp giữ nhạc và thanh thời gian)
+    // 4. Xử lý Music Player - FIX LẶP NHẠC
     const audio = document.getElementById("myAudio");
     const musicBtn = document.getElementById("musicBtn");
     const musicContainer = document.getElementById("musicContainer");
@@ -310,6 +308,12 @@
         currTimeText.innerText = formatTime(currentTime);
         if(duration) durTimeText.innerText = formatTime(duration);
         localStorage.setItem('musicTime', currentTime);
+    });
+
+    // CƯỠNG BỨC PHÁT LẠI KHI KẾT THÚC
+    audio.addEventListener('ended', () => {
+        audio.currentTime = 0;
+        audio.play();
     });
 
     progressContainer.addEventListener('click', (e) => {
@@ -337,7 +341,6 @@
         }
     }
 
-    // Logic khôi phục trạng thái nhạc khi chuyển trang
     window.addEventListener('load', () => {
         renderHomeProducts();
         reveal();
