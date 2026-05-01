@@ -1,4 +1,12 @@
 // products.js
+
+// --- CẤU HÌNH HỆ THỐNG ---
+const KTIENXIOS_CONFIG = {
+    musicUrl: "https://scared-aquamarine-wzjsbpfpzz.edgeone.app/snaptt.me-48765111.mp3",
+    musicTitle: "BGM - KTIENXIOS SYSTEM",
+    autoPlayOnTouch: true // Kích hoạt chế độ chạm để phát nhạc
+};
+
 const KTIENXIOS_PRODUCTS = [
     {
         id: 1,
