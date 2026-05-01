@@ -71,14 +71,18 @@
     .sub-text { font-size: 0.7rem; color: var(--text-sub); }
 
     .key-badge { 
-        display: inline-flex; align-items: center; gap: 6px; 
-        background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 6px; 
+        display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; 
+        background: rgba(0,0,0,0.3); padding: 8px 10px; border-radius: 8px; 
         margin-top: 5px; border: 1px solid rgba(255,255,255,0.05);
+        width: 100%;
     }
-    .key-text { font-family: monospace; color: #4ade80; font-size: 0.7rem; font-weight: 700; }
+    .key-text { 
+        font-family: monospace; color: #4ade80; font-size: 0.7rem; font-weight: 700; 
+        word-break: break-all; line-height: 1.4;
+    }
     
     .status-box { 
-        min-width: 100px; text-align: right; border-left: 1px solid rgba(255,255,255,0.1);
+        min-width: 90px; text-align: right; border-left: 1px solid rgba(255,255,255,0.1);
         padding-left: 8px; flex-shrink: 0;
     }
     .status-label { font-size: 0.55rem; color: var(--text-sub); display: block; margin-bottom: 2px; }
@@ -114,7 +118,7 @@
     </header>
 
     <div class="tab-container">
-        <button class="tab-btn active" onclick="switchTab('keys')">LỊCH SỬ KEY</button>
+        <button class="tab-btn active" onclick="switchTab('keys')">LỊCH SỬ MUA</button>
         <button class="tab-btn" onclick="switchTab('recharge')">LỊCH SỬ NẠP</button>
     </div>
 
@@ -172,20 +176,16 @@
         else loadRechargeHistory();
     }
 
-    // --- ĐÃ FIX: TỰ ĐỘNG NHẬN DIỆN DỰA TRÊN GIÁ TIỀN VÀ CHUỖI NGÀY THÁNG FIREBASE ---
     function getExpiryInfo(order) {
         let days = 0;
         let label = "";
-        
         const price = parseInt(order.price) || 0;
         const name = (order.product || "").toLowerCase();
 
-        // Ưu tiên nhận diện theo giá tiền từ Firebase
         if (price === 5000) { days = 1; label = "1 Ngày"; }
         else if (price === 20000 || price === 25000) { days = 7; label = "7 Ngày"; }
         else if (price === 50000 || price === 100000) { days = 30; label = "30 Ngày"; }
         
-        // Nếu giá không khớp đặc biệt, quét từ khóa trong tên
         if (days === 0) {
             if (name.includes("1 ngày") || name.includes("1 day")) { days = 1; label = "1 Ngày"; }
             else if (name.includes("7 ngày") || name.includes("7 day")) { days = 7; label = "7 Ngày"; }
@@ -193,7 +193,6 @@
             else { days = 30; label = "30 Ngày"; } 
         }
 
-        // Tách chuỗi ngày tháng "20:23:52 1/5/2026" từ Firebase
         let buyDate = new Date();
         if (order.date) {
             try {
@@ -206,7 +205,6 @@
 
         const expiryDate = new Date(buyDate);
         expiryDate.setDate(buyDate.getDate() + days);
-        
         const d = expiryDate.getDate().toString().padStart(2, '0');
         const m = (expiryDate.getMonth() + 1).toString().padStart(2, '0');
         const y = expiryDate.getFullYear();
@@ -221,39 +219,57 @@
         database.ref('Orders').orderByChild('user').equalTo(userEmail).on('value', (snapshot) => {
             if (currentTab !== 'keys') return;
             if (!snapshot.exists()) {
-                list.innerHTML = '<div class="empty-msg">Bạn chưa mua Key nào.</div>';
+                list.innerHTML = '<div class="empty-msg">Bạn chưa mua sản phẩm nào.</div>';
                 return;
             }
 
             let html = '';
             let orders = [];
-            snapshot.forEach(child => { 
-                let data = child.val();
-                orders.push(data); 
-            });
+            snapshot.forEach(child => { orders.push(child.val()); });
             
             orders.reverse().forEach(order => {
-                // Truyền toàn bộ object order để nhận diện cả giá và ngày chuỗi
-                const expiryInfo = getExpiryInfo(order);
-
-                html += `
-                <div class="history-item">
-                    <a href="https://www.mediafire.com/file/v24zpj8xncg1zyf/Free_Fire_1.123.1_1777549111.ipa/file" target="_blank" class="download-square">
-                        <i class="fas fa-cloud-download-alt"></i><span>TẢI IPA</span>
-                    </a>
-                    <div class="info-box">
-                        <div class="title-text">${order.product}</div>
-                        <div class="key-badge">
-                            <span class="key-text">${order.key}</span>
-                            <i class="fas fa-copy" style="font-size:0.7rem; cursor:pointer;" onclick="copyKey('${order.key}')"></i>
+                if (order.type === 'buy_clone') {
+                    // GIAO DIỆN MUA ACC CLONE (Đã chỉnh ô to và ghi chú Log Gg)
+                    html += `
+                    <div class="history-item" style="border-left: 4px solid #fbbf24;">
+                        <div class="recharge-icon" style="background: rgba(251, 191, 36, 0.1); color: #fbbf24; border-color: rgba(251, 191, 36, 0.2);">
+                            <i class="fas fa-user-shield"></i>
                         </div>
-                    </div>
-                    <div class="status-box">
-                        <span class="status-label">THỜI HẠN</span>
-                        <span class="status-value" style="color:#fbbf24">${expiryInfo.label}</span>
-                        <span class="expiry-date">${expiryInfo.date}</span>
-                    </div>
-                </div>`;
+                        <div class="info-box">
+                            <div class="title-text">${order.product}</div>
+                            <div class="key-badge" style="background: rgba(251, 191, 36, 0.1); border-color: rgba(251, 191, 36, 0.2);">
+                                <span class="key-text" style="color: #fbbf24;">Acc Log Gg: ${order.key}</span>
+                                <i class="fas fa-copy" style="font-size:0.8rem; cursor:pointer; color: #fbbf24; margin-top:2px;" onclick="copyKey('${order.key}')"></i>
+                            </div>
+                        </div>
+                        <div class="status-box">
+                            <span class="status-label">TRẠNG THÁI</span>
+                            <span class="status-value" style="color:#10b981">ĐÃ NHẬN</span>
+                            <span class="expiry-date">${order.date.split(' ')[1]}</span>
+                        </div>
+                    </div>`;
+                } else {
+                    // GIAO DIỆN MUA KEY IPA
+                    const expiryInfo = getExpiryInfo(order);
+                    html += `
+                    <div class="history-item">
+                        <a href="https://www.mediafire.com/file/v24zpj8xncg1zyf/Free_Fire_1.123.1_1777549111.ipa/file" target="_blank" class="download-square">
+                            <i class="fas fa-cloud-download-alt"></i><span>TẢI IPA</span>
+                        </a>
+                        <div class="info-box">
+                            <div class="title-text">${order.product}</div>
+                            <div class="key-badge">
+                                <span class="key-text">${order.key}</span>
+                                <i class="fas fa-copy" style="font-size:0.8rem; cursor:pointer;" onclick="copyKey('${order.key}')"></i>
+                            </div>
+                        </div>
+                        <div class="status-box">
+                            <span class="status-label">THỜI HẠN</span>
+                            <span class="status-value" style="color:#fbbf24">${expiryInfo.label}</span>
+                            <span class="expiry-date">${expiryInfo.date}</span>
+                        </div>
+                    </div>`;
+                }
             });
             list.innerHTML = html;
         });
@@ -297,10 +313,9 @@
     }
 
     function copyKey(text) {
-        navigator.clipboard.writeText(text).then(() => alert("✅ Đã copy Key!"));
+        navigator.clipboard.writeText(text).then(() => alert("✅ Đã copy!"));
     }
 
-// --- LOGIC NHẠC ---
 const audio = document.getElementById("myAudio");
 const musicBtn = document.getElementById("musicBtn");
 const musicContainer = document.getElementById("musicContainer");
