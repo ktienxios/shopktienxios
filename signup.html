@@ -45,7 +45,6 @@
             position: relative; overflow: hidden;
         }
 
-        /* Hiệu ứng thanh chạy trên đầu */
         .auth-box::before {
             content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 3px;
             background: linear-gradient(90deg, transparent, var(--primary), var(--secondary), transparent);
@@ -87,6 +86,27 @@
 
         .auth-footer { text-align: center; margin-top: 25px; border-top: 1px solid var(--glass-border); padding-top: 20px; }
         .auth-footer a { color: var(--primary); text-decoration: none; font-weight: 700; }
+
+        /* --- MUSIC PLAYER STYLE --- */
+        .music-player {
+            position: fixed; bottom: 20px; right: 20px; z-index: 999;
+            display: flex; align-items: center; gap: 12px;
+            background: rgba(15, 23, 42, 0.8); padding: 8px 12px; border-radius: 50px;
+            border: 1px solid var(--glass-border); backdrop-filter: blur(10px);
+            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .music-info { width: 0; overflow: hidden; opacity: 0; transition: 0.5s; display: flex; flex-direction: column; gap: 4px; }
+        .music-player.active .music-info { width: 130px; opacity: 1; }
+        .music-btn {
+            width: 40px; height: 40px; border-radius: 50%; 
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        @keyframes pulse-glow { 0% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.4); } 70% { box-shadow: 0 0 0 12px rgba(6, 182, 212, 0); } 100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); } }
+        .playing { animation: pulse-glow 2s infinite; }
+        .progress-container { width: 100%; height: 3px; background: rgba(255,255,255,0.1); border-radius: 10px; cursor: pointer; position: relative; }
+        .progress-bar { height: 100%; background: var(--primary); width: 0%; border-radius: 10px; }
+        .time-display { font-size: 9px; color: var(--text-sub); display: flex; justify-content: space-between; }
     </style>
 </head>
 <body>
@@ -98,32 +118,32 @@
                 <p style="color:var(--text-sub); font-size:14px; margin-top:5px;">Gia nhập cộng đồng KTIENXIOS ngay</p>
             </div>
             
-            <form>
+            <form id="signupForm">
                 <div class="form-group">
                     <label>Tên Đăng Nhập</label>
                     <div class="input-wrapper">
-                        <input type="text" placeholder="Username" required>
+                        <input type="text" id="regUsername" placeholder="Username" required>
                         <i class="fas fa-user input-icon"></i>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>Địa Chỉ Email</label>
                     <div class="input-wrapper">
-                        <input type="email" placeholder="email@example.com" required>
+                        <input type="email" id="regEmail" placeholder="email@example.com" required>
                         <i class="fas fa-envelope input-icon"></i>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>Mật Khẩu</label>
                     <div class="input-wrapper">
-                        <input type="password" placeholder="••••••••" required>
+                        <input type="password" id="regPass" placeholder="••••••••" required>
                         <i class="fas fa-lock input-icon"></i>
                     </div>
                 </div>
                 <div class="form-group">
                     <label>Xác Nhận</label>
                     <div class="input-wrapper">
-                        <input type="password" placeholder="••••••••" required>
+                        <input type="password" id="regConfirm" placeholder="••••••••" required>
                         <i class="fas fa-shield-check input-icon"></i>
                     </div>
                 </div>
@@ -139,5 +159,146 @@
             </div>
         </div>
     </div>
+
+    <!-- Music Player -->
+    <div class="music-player" id="musicContainer">
+        <div class="music-info">
+            <div style="font-size: 10px; font-weight: 700; white-space: nowrap;">BGM - KTIENXIOS</div>
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="time-display">
+                <span id="currTime">0:00</span>
+                <span id="durTime">0:00</span>
+            </div>
+        </div>
+        <audio id="myAudio" loop>
+            <source src="https://scared-aquamarine-wzjsbpfpzz.edgeone.app/snaptt.me-48765111.mp3" type="audio/mpeg">
+        </audio>
+        <button class="music-btn" onclick="toggleMusic()" id="musicBtn">
+            <i class="fas fa-music"></i>
+        </button>
+    </div>
+
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDWe6sAcxUyis87c8GPLFwo5Z0zS3eO-34",
+            authDomain: "severupdate-1b36a.firebaseapp.com",
+            databaseURL: "https://severupdate-1b36a-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "severupdate-1b36a",
+            storageBucket: "severupdate-1b36a.firebasestorage.app",
+            messagingSenderId: "123894557961",
+            appId: "1:123894557961:web:c0c9ec59fb65f71da937d8",
+            measurementId: "G-N4BN7JTZQB"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        document.getElementById('signupForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            const pass = document.getElementById('regPass').value;
+            const confirm = document.getElementById('regConfirm').value;
+
+            if (pass !== confirm) return alert("Mật khẩu không khớp!");
+
+            auth.createUserWithEmailAndPassword(email, pass)
+                .then((userCredential) => {
+                    const safeEmail = email.replace(/\./g, '_');
+                    return db.ref('Users/' + safeEmail).set({
+                        username: username,
+                        email: email,
+                        balance: 0,
+                        role: 'user',
+                        createdAt: new Date().toISOString()
+                    });
+                })
+                .then(() => {
+                    alert("Đăng ký thành công!");
+                    window.location.href = 'login.html';
+                })
+                .catch((error) => alert("Lỗi: " + error.message));
+        });
+
+// --- LOGIC NHẠC TỰ ĐỘNG KHI CHẠM ---
+const audio = document.getElementById("myAudio");
+const musicBtn = document.getElementById("musicBtn");
+const musicContainer = document.getElementById("musicContainer");
+
+// 1. Cấu hình nguồn nhạc từ products.js
+if (typeof KTIENXIOS_CONFIG !== 'undefined') {
+    const musicSource = audio.querySelector('source');
+    musicSource.src = KTIENXIOS_CONFIG.musicUrl;
+    audio.load();
+    
+    const titleDisplay = document.querySelector('.music-info div');
+    if (titleDisplay) titleDisplay.innerText = KTIENXIOS_CONFIG.musicTitle;
+}
+
+// 2. Hàm cập nhật giao diện
+function updateMusicUI(isPlaying) {
+    if (isPlaying) {
+        musicBtn.classList.add('playing');
+        musicBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        if(musicContainer) musicContainer.classList.add('active');
+    } else {
+        musicBtn.classList.remove('playing');
+        musicBtn.innerHTML = '<i class="fas fa-music"></i>';
+        if(musicContainer) musicContainer.classList.remove('active');
+    }
+}
+
+// 3. Hàm xử lý phát nhạc (Fix lỗi trình duyệt chặn)
+function playMusic() {
+    audio.play().then(() => {
+        localStorage.setItem('musicPlaying', 'true');
+        updateMusicUI(true);
+        // Sau khi đã phát thành công, gỡ bỏ sự kiện lắng nghe để tránh phát lại khi chạm tiếp
+        document.removeEventListener('click', playMusic);
+        document.removeEventListener('touchstart', playMusic);
+    }).catch(err => console.log("Trình duyệt chờ tương tác..."));
+}
+
+// 4. Lắng nghe tương tác đầu tiên trên màn hình để mở nhạc
+if (localStorage.getItem('musicPlaying') !== 'false') {
+    document.addEventListener('click', playMusic);
+    document.addEventListener('touchstart', playMusic);
+}
+
+// 5. Nút bấm thủ công (Bật/Tắt)
+function toggleMusic() {
+    if (audio.paused) {
+        audio.play();
+        localStorage.setItem('musicPlaying', 'true');
+        updateMusicUI(true);
+    } else {
+        audio.pause();
+        localStorage.setItem('musicPlaying', 'false');
+        updateMusicUI(false);
+    }
+}
+
+// 6. Đồng bộ thời gian nhạc khi chuyển trang
+audio.addEventListener('timeupdate', () => {
+    localStorage.setItem('musicTime', audio.currentTime);
+});
+
+window.addEventListener('load', () => {
+    const savedTime = localStorage.getItem('musicTime');
+    const isPlaying = localStorage.getItem('musicPlaying');
+    if (savedTime) audio.currentTime = parseFloat(savedTime);
+    if (isPlaying === 'true') {
+        playMusic();
+    }
+});
+    </script>
 </body>
 </html>
