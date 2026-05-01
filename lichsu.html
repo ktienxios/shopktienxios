@@ -31,7 +31,6 @@
     .header h1 { font-size: 1.3rem; font-weight: 800; }
     .back-btn { width: 38px; height: 38px; border-radius: 10px; background: var(--card-bg); border: 1px solid var(--glass-border); color: #fff; display: flex; align-items: center; justify-content: center; text-decoration: none; }
 
-    /* Tab System */
     .tab-container {
         display: flex; background: rgba(0,0,0,0.2); border-radius: 14px;
         padding: 5px; margin-bottom: 20px; border: 1px solid var(--glass-border);
@@ -46,14 +45,12 @@
         box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
     }
 
-    /* History Items */
     .history-item {
         background: var(--card-bg); border: 1px solid var(--glass-border);
         border-radius: 16px; padding: 12px; margin-bottom: 12px;
         display: flex; align-items: center; gap: 12px; backdrop-filter: blur(10px);
     }
 
-    /* Item Key Mua */
     .download-square {
         min-width: 50px; height: 50px;
         background: linear-gradient(135deg, var(--primary), #3b82f6);
@@ -63,7 +60,6 @@
     }
     .download-square i { font-size: 1.1rem; margin-bottom: 1px; }
 
-    /* Item Nạp Tiền */
     .recharge-icon {
         min-width: 50px; height: 50px; background: rgba(16, 185, 129, 0.1);
         border-radius: 10px; display: flex; align-items: center; justify-content: center;
@@ -82,15 +78,15 @@
     .key-text { font-family: monospace; color: #4ade80; font-size: 0.7rem; font-weight: 700; }
     
     .status-box { 
-        min-width: 80px; text-align: right; border-left: 1px solid rgba(255,255,255,0.1);
+        min-width: 100px; text-align: right; border-left: 1px solid rgba(255,255,255,0.1);
         padding-left: 8px; flex-shrink: 0;
     }
-    .status-label { font-size: 0.55rem; color: var(--text-sub); display: block; }
-    .status-value { font-weight: 800; font-size: 0.8rem; }
+    .status-label { font-size: 0.55rem; color: var(--text-sub); display: block; margin-bottom: 2px; }
+    .status-value { font-weight: 800; font-size: 0.85rem; display: block; }
+    .expiry-date { font-size: 0.6rem; color: #94a3b8; margin-top: 2px; display: block; font-weight: 500; }
 
     .empty-msg { text-align: center; padding: 40px; color: var(--text-sub); font-size: 0.9rem; }
 
-    /* Music Player */
     .music-player {
         position: fixed; bottom: 20px; left: 20px; z-index: 999;
         display: flex; align-items: center; gap: 12px;
@@ -127,7 +123,6 @@
     </div>
 </div>
 
-<!-- Music Player -->
 <div class="music-player" id="musicContainer">
     <div class="music-info">
         <div style="font-size: 10px; font-weight: 700; white-space: nowrap; color: #fff;">BGM - KTIENXIOS</div>
@@ -171,10 +166,52 @@
     function switchTab(tab) {
         currentTab = tab;
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        event.target.classList.add('active');
+        if(event) event.target.classList.add('active');
         
         if (tab === 'keys') loadKeysHistory();
         else loadRechargeHistory();
+    }
+
+    // --- ĐÃ FIX: TỰ ĐỘNG NHẬN DIỆN DỰA TRÊN GIÁ TIỀN VÀ CHUỖI NGÀY THÁNG FIREBASE ---
+    function getExpiryInfo(order) {
+        let days = 0;
+        let label = "";
+        
+        const price = parseInt(order.price) || 0;
+        const name = (order.product || "").toLowerCase();
+
+        // Ưu tiên nhận diện theo giá tiền từ Firebase
+        if (price === 5000) { days = 1; label = "1 Ngày"; }
+        else if (price === 20000 || price === 25000) { days = 7; label = "7 Ngày"; }
+        else if (price === 50000 || price === 100000) { days = 30; label = "30 Ngày"; }
+        
+        // Nếu giá không khớp đặc biệt, quét từ khóa trong tên
+        if (days === 0) {
+            if (name.includes("1 ngày") || name.includes("1 day")) { days = 1; label = "1 Ngày"; }
+            else if (name.includes("7 ngày") || name.includes("7 day")) { days = 7; label = "7 Ngày"; }
+            else if (name.includes("30 ngày") || name.includes("30 day")) { days = 30; label = "30 Ngày"; }
+            else { days = 30; label = "30 Ngày"; } 
+        }
+
+        // Tách chuỗi ngày tháng "20:23:52 1/5/2026" từ Firebase
+        let buyDate = new Date();
+        if (order.date) {
+            try {
+                const parts = order.date.split(' ');
+                const dateParts = parts[1].split('/');
+                const timeParts = parts[0].split(':');
+                buyDate = new Date(dateParts[2], dateParts[1] - 1, dateParts[0], timeParts[0], timeParts[1], timeParts[2]);
+            } catch(e) { buyDate = new Date(); }
+        }
+
+        const expiryDate = new Date(buyDate);
+        expiryDate.setDate(buyDate.getDate() + days);
+        
+        const d = expiryDate.getDate().toString().padStart(2, '0');
+        const m = (expiryDate.getMonth() + 1).toString().padStart(2, '0');
+        const y = expiryDate.getFullYear();
+        
+        return { label: label, date: `Hết hạn: ${d}/${m}/${y}` };
     }
 
     function loadKeysHistory() {
@@ -190,9 +227,15 @@
 
             let html = '';
             let orders = [];
-            snapshot.forEach(child => { orders.push(child.val()); });
+            snapshot.forEach(child => { 
+                let data = child.val();
+                orders.push(data); 
+            });
             
             orders.reverse().forEach(order => {
+                // Truyền toàn bộ object order để nhận diện cả giá và ngày chuỗi
+                const expiryInfo = getExpiryInfo(order);
+
                 html += `
                 <div class="history-item">
                     <a href="https://www.mediafire.com/file/v24zpj8xncg1zyf/Free_Fire_1.123.1_1777549111.ipa/file" target="_blank" class="download-square">
@@ -207,7 +250,8 @@
                     </div>
                     <div class="status-box">
                         <span class="status-label">THỜI HẠN</span>
-                        <span class="status-value" style="color:#fbbf24">30 Ngày</span>
+                        <span class="status-value" style="color:#fbbf24">${expiryInfo.label}</span>
+                        <span class="expiry-date">${expiryInfo.date}</span>
                     </div>
                 </div>`;
             });
@@ -219,10 +263,10 @@
         const list = document.getElementById('content-list');
         list.innerHTML = '<div class="empty-msg">Đang tải lịch sử nạp...</div>';
 
-        database.ref('RechargeRequests').orderByChild('email').equalTo(userEmail).on('value', (snapshot) => {
+        database.ref('RechargeHistory').orderByChild('email').equalTo(userEmail).on('value', (snapshot) => {
             if (currentTab !== 'recharge') return;
             if (!snapshot.exists()) {
-                list.innerHTML = '<div class="empty-msg">Chưa có lịch sử nạp tiền.</div>';
+                list.innerHTML = '<div class="empty-msg">Chưa có lịch sử giao dịch thành công.</div>';
                 return;
             }
 
@@ -231,8 +275,8 @@
             snapshot.forEach(child => { items.push(child.val()); });
 
             items.reverse().forEach(item => {
-                const statusColor = item.status === 'success' ? '#10b981' : (item.status === 'pending' ? '#fbbf24' : '#ef4444');
-                const statusText = item.status === 'success' ? 'THÀNH CÔNG' : (item.status === 'pending' ? 'ĐANG CHỜ' : 'BỊ TỪ CHỐI');
+                const statusColor = item.status === 'success' ? '#10b981' : '#ef4444';
+                const statusText = item.status === 'success' ? 'THÀNH CÔNG' : 'BỊ TỪ CHỐI';
 
                 html += `
                 <div class="history-item">
@@ -240,7 +284,7 @@
                     <div class="info-box">
                         <div class="title-text">+${item.amount.toLocaleString()}đ</div>
                         <div class="sub-text">${item.date || 'Giao dịch'}</div>
-                        <div class="sub-text" style="font-size:0.6rem; margin-top:2px; color:#6366f1">Nội dung: ${item.content}</div>
+                        <div class="sub-text" style="font-size:0.6rem; margin-top:2px; color:#6366f1">Nội dung: ${item.content || 'Nạp tiền hệ thống'}</div>
                     </div>
                     <div class="status-box">
                         <span class="status-label">TRẠNG THÁI</span>
@@ -256,22 +300,11 @@
         navigator.clipboard.writeText(text).then(() => alert("✅ Đã copy Key!"));
     }
 
-// --- LOGIC NHẠC TỰ ĐỘNG KHI CHẠM ---
+// --- LOGIC NHẠC ---
 const audio = document.getElementById("myAudio");
 const musicBtn = document.getElementById("musicBtn");
 const musicContainer = document.getElementById("musicContainer");
 
-// 1. Cấu hình nguồn nhạc từ products.js
-if (typeof KTIENXIOS_CONFIG !== 'undefined') {
-    const musicSource = audio.querySelector('source');
-    musicSource.src = KTIENXIOS_CONFIG.musicUrl;
-    audio.load();
-    
-    const titleDisplay = document.querySelector('.music-info div');
-    if (titleDisplay) titleDisplay.innerText = KTIENXIOS_CONFIG.musicTitle;
-}
-
-// 2. Hàm cập nhật giao diện
 function updateMusicUI(isPlaying) {
     if (isPlaying) {
         musicBtn.classList.add('playing');
@@ -284,24 +317,20 @@ function updateMusicUI(isPlaying) {
     }
 }
 
-// 3. Hàm xử lý phát nhạc (Fix lỗi trình duyệt chặn)
 function playMusic() {
     audio.play().then(() => {
         localStorage.setItem('musicPlaying', 'true');
         updateMusicUI(true);
-        // Sau khi đã phát thành công, gỡ bỏ sự kiện lắng nghe để tránh phát lại khi chạm tiếp
         document.removeEventListener('click', playMusic);
         document.removeEventListener('touchstart', playMusic);
-    }).catch(err => console.log("Trình duyệt chờ tương tác..."));
+    }).catch(err => console.log("Chờ tương tác..."));
 }
 
-// 4. Lắng nghe tương tác đầu tiên trên màn hình để mở nhạc
 if (localStorage.getItem('musicPlaying') !== 'false') {
     document.addEventListener('click', playMusic);
     document.addEventListener('touchstart', playMusic);
 }
 
-// 5. Nút bấm thủ công (Bật/Tắt)
 function toggleMusic() {
     if (audio.paused) {
         audio.play();
@@ -314,7 +343,6 @@ function toggleMusic() {
     }
 }
 
-// 6. Đồng bộ thời gian nhạc khi chuyển trang
 audio.addEventListener('timeupdate', () => {
     localStorage.setItem('musicTime', audio.currentTime);
 });
