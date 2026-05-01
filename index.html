@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KTIENXIOS - Shop Dịch Vụ iOS Uy Tín</title>
+    <link rel="icon" type="image/x-icon" href="https://tedexe.shop/assets/images/tedfa.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+    /* --- RESET & COLOR SYSTEM --- */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; overflow-x: hidden; background-color: #020617; scroll-behavior: smooth; }
+    :root {
+        --primary: #06b6d4; 
+        --secondary: #3b82f6; 
+        --dark-bg: #020617; 
+        --card-bg: rgba(15, 23, 42, 0.7);
+        --glass-border: rgba(6, 182, 212, 0.25); 
+        --text-main: #f8fafc;
+        --text-sub: #94a3b8;
+    }
+
+    .lnd-body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background-color: var(--dark-bg);
+        color: var(--text-main);
+        background-image: 
+            radial-gradient(circle at 10% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 40%),
+            radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 40%),
+            linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
+        background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+        min-height: 100vh;
+    }
+    
+    .lnd-container { max-width: 1200px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 2; }
+    
+    /* --- ANIMATIONS --- */
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-15px); }
+    }
+    @keyframes pulse-glow {
+        0% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.4); }
+        70% { box-shadow: 0 0 0 15px rgba(6, 182, 212, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
+    }
+    @keyframes slide-up {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* --- NAVBAR --- */
+    .lnd-nav {
+        position: fixed; top: 0; left: 0; right: 0; height: 70px; z-index: 1000;
+        background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(15px);
+        border-bottom: 1px solid var(--glass-border);
+    }
+    .lnd-nav .lnd-container { height: 100%; display: flex; justify-content: space-between; align-items: center; }
+    
+    .logo-text {
+        font-weight: 800; font-size: 1.4rem; letter-spacing: -1.5px;
+        background: linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.3));
+    }
+
+    .btn-nav-small {
+        padding: 6px 16px; border-radius: 10px; font-size: 0.8rem; font-weight: 700;
+        cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .btn-nav-login { background: transparent; border: 1px solid var(--glass-border); color: #fff; }
+    .btn-nav-reg { background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; color: #fff; }
+    .btn-nav-small:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+    /* --- HERO --- */
+    .lnd-hero { padding: 160px 0 100px; text-align: center; }
+    .floating-badge {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 8px 20px; border-radius: 50px;
+        background: rgba(6, 182, 212, 0.1); border: 1px solid var(--glass-border);
+        color: var(--primary); font-weight: 700; font-size: 0.8rem;
+        margin-bottom: 25px; animation: float 3s infinite ease-in-out;
+    }
+    .hero-title { font-size: clamp(2.5rem, 8vw, 4.8rem); font-weight: 800; line-height: 1.1; margin-bottom: 25px; letter-spacing: -2px; }
+    .hero-title span { background: linear-gradient(to right, #22d3ee, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    /* --- BUTTONS --- */
+    .btn-lnd {
+        display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+        padding: 14px 32px; border-radius: 14px; font-weight: 700; text-decoration: none; 
+        transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer;
+    }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; box-shadow: 0 10px 20px -10px rgba(6, 182, 212, 0.5); border: none; }
+    .btn-outline { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); color: white; }
+    .btn-lnd:hover { transform: translateY(-5px) scale(1.02); }
+
+    /* --- PRODUCT CARDS --- */
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 60px; }
+    .p-card {
+        background: var(--card-bg); border: 1px solid var(--glass-border);
+        padding: 25px; border-radius: 24px; transition: 0.4s;
+        backdrop-filter: blur(10px); position: relative; overflow: hidden;
+    }
+    .p-card:hover {
+        transform: translateY(-12px);
+        background: rgba(15, 23, 42, 0.9); border-color: var(--primary);
+        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+    }
+    .p-img { width: 100%; height: 220px; object-fit: cover; border-radius: 16px; margin-bottom: 20px; }
+
+    /* --- MODAL AUTH --- */
+    .auth-modal {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2000;
+        background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px);
+        display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .auth-modal.active { display: flex; animation: slide-up 0.4s ease; }
+    .auth-card {
+        background: #0f172a; border: 1px solid var(--glass-border);
+        width: 100%; max-width: 400px; padding: 40px; border-radius: 28px; position: relative;
+    }
+    .auth-input {
+        width: 100%; padding: 15px; background: rgba(255,255,255,0.03); 
+        border: 1px solid var(--glass-border); border-radius: 12px; color: #fff; margin-bottom: 15px; outline: none;
+    }
+
+    /* --- MUSIC BUTTON --- */
+    .music-player { position: fixed; bottom: 30px; right: 30px; z-index: 999; }
+    .music-btn {
+        width: 55px; height: 55px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem; transition: 0.3s;
+    }
+    .playing { animation: pulse-glow 2s infinite; }
+
+    .reveal { opacity: 0; transform: translateY(40px); transition: 0.8s ease-out; }
+    .reveal.active { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="lnd-body">
+    <!-- Navbar -->
+    <nav class="lnd-nav">
+        <div class="lnd-container">
+            <a href="#" style="text-decoration:none; display:flex; align-items:center; gap:8px;">
+                <div style="width:32px; height:32px; background:linear-gradient(135deg, var(--primary), var(--secondary)); border-radius:8px; display:flex; align-items:center; justify-content:center; box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);">
+                    <i class="fas fa-bolt" style="color: #fff; font-size: 0.9rem;"></i>
+                </div>
+                <span class="logo-text">KTIENXIOS</span>
+            </a>
+            <div style="display: flex; gap: 8px;">
+                <button onclick="openAuth('login')" class="btn-nav-small btn-nav-login">Login</button>
+                <button onclick="openAuth('register')" class="btn-nav-small btn-nav-reg">Sign Up</button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="lnd-hero">
+        <div class="lnd-container">
+            <div class="floating-badge reveal">
+                <i class="fas fa-shield-check"></i> HỆ THỐNG GIAO DỊCH TỰ ĐỘNG 24/7
+            </div>
+            <h1 class="hero-title reveal">
+                GIẢI PHÁP <span>BYPASS IOS</span> <br> TOÀN DIỆN NHẤT
+            </h1>
+            <p class="reveal" style="color:var(--text-sub); margin-bottom:40px; max-width:600px; margin-inline: auto; font-size:1.1rem;">
+                Dịch vụ mở khóa iCloud, Tool tối ưu FPS và tài khoản Premium uy tín hàng đầu. Trải nghiệm tốc độ và sự khác biệt.
+            </p>
+            <div class="reveal" style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap;">
+                <button onclick="openAuth('register')" class="btn-lnd btn-primary">KHÁM PHÁ NGAY <i class="fas fa-arrow-right"></i></button>
+                <a href="#services" class="btn-lnd btn-outline">XEM BẢNG GIÁ</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="services" class="lnd-container reveal" style="padding-bottom:120px;">
+        <div style="text-align:center; margin-bottom:50px;">
+            <h2 style="font-size:2.5rem; color:#fff; margin-bottom:10px;">Dịch Vụ Nổi Bật</h2>
+            <div style="width:80px; height:4px; background:var(--primary); margin: 0 auto; border-radius:10px;"></div>
+        </div>
+        
+        <!-- THÀNH PHẦN QUAN TRỌNG: Nơi đổ hàng từ products.js -->
+        <div class="product-grid" id="productContainer"></div>
+    </section>
+
+    <!-- Modal Auth -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-card" id="loginForm">
+            <i class="fas fa-times" onclick="closeAuth()" style="position:absolute; top:25px; right:25px; color:var(--text-sub); cursor:pointer;"></i>
+            <h2 style="margin-bottom:30px; text-align:center;">Đăng Nhập</h2>
+            <input type="text" class="auth-input" placeholder="Tên đăng nhập">
+            <input type="password" class="auth-input" placeholder="Mật khẩu">
+            <button class="btn-lnd btn-primary" style="width:100%; margin-top:10px;">ĐĂNG NHẬP NGAY</button>
+            <p style="text-align:center; margin-top:25px; color:var(--text-sub); font-size:0.9rem;">
+                Chưa có tài khoản? <span onclick="openAuth('register')" style="color:var(--primary); cursor:pointer; font-weight:700;">Đăng ký</span>
+            </p>
+        </div>
+
+        <div class="auth-card" id="registerForm" style="display:none;">
+            <i class="fas fa-times" onclick="closeAuth()" style="position:absolute; top:25px; right:25px; color:var(--text-sub); cursor:pointer;"></i>
+            <h2 style="margin-bottom:30px; text-align:center;">Đăng Ký</h2>
+            <input type="text" class="auth-input" placeholder="Username">
+            <input type="email" class="auth-input" placeholder="Email liên hệ">
+            <input type="password" class="auth-input" placeholder="Mật khẩu">
+            <button class="btn-lnd btn-primary" style="width:100%; margin-top:10px;">TẠO TÀI KHOẢN</button>
+            <p style="text-align:center; margin-top:25px; color:var(--text-sub); font-size:0.9rem;">
+                Đã có tài khoản? <span onclick="openAuth('login')" style="color:var(--primary); cursor:pointer; font-weight:700;">Đăng nhập</span>
+            </p>
+        </div>
+    </div>
+
+    <div class="music-player">
+        <audio id="myAudio" loop>
+            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+        </audio>
+        <button class="music-btn" onclick="toggleMusic()" id="musicBtn"><i class="fas fa-music"></i></button>
+    </div>
+
+    <footer style="padding:60px 0; text-align:center; border-top:1px solid var(--glass-border); background: rgba(1, 2, 6, 0.5);">
+        <div class="lnd-container">
+            <p style="color:var(--text-sub); font-size:0.9rem;">&copy; 2026 KTIENXIOS SYSTEM. Uy Tín Tạo Nên Thương Hiệu.</p>
+        </div>
+    </footer>
+</div>
+
+<!-- GỌI FILE DỮ LIỆU CHUNG -->
+<script src="products.js"></script>
+
+<script>
+    // 1. Hiệu ứng cuộn trang
+    function reveal() {
+        document.querySelectorAll(".reveal").forEach(r => {
+            if (r.getBoundingClientRect().top < window.innerHeight - 80) r.classList.add("active");
+        });
+    }
+    window.addEventListener("scroll", reveal);
+
+    // 2. Tự động đổ hàng từ products.js
+    function renderHomeProducts() {
+        const container = document.getElementById('productContainer');
+        if(!container || typeof KTIENXIOS_PRODUCTS === 'undefined') return;
+        
+        let html = '';
+        KTIENXIOS_PRODUCTS.forEach(p => {
+            html += `
+                <div class="p-card">
+                    <img src="${p.img}" class="p-img">
+                    ${p.hot ? '<div style="position:absolute; top:20px; right:20px; background:var(--primary); color:#fff; padding:5px 12px; border-radius:50px; font-size:0.7rem; font-weight:800;">HOT</div>' : ''}
+                    <h3>${p.name}</h3>
+                    <p style="color:var(--text-sub); font-size:0.95rem; margin-bottom:15px;">${p.desc}</p>
+                    <div style="font-weight:800; color:var(--primary); margin-bottom:15px;">Giá: ${p.price}</div>
+                    <button onclick="openAuth('login')" class="btn-lnd btn-primary" style="width:100%;">MUA NGAY</button>
+                </div>`;
+        });
+        container.innerHTML = html;
+        reveal(); // Chạy lại reveal để hiện hàng ra mượt mà
+    }
+
+    // Chạy khi trang load xong
+    window.addEventListener('load', () => {
+        renderHomeProducts();
+        reveal();
+    });
+
+    // 3. Xử lý Modal Auth
+    const modal = document.getElementById('authModal');
+    const loginForm = document.getElementById('loginForm');
+    const regForm = document.getElementById('registerForm');
+
+    function openAuth(type) {
+        modal.classList.add('active');
+        if(type === 'login') {
+            loginForm.style.display = 'block';
+            regForm.style.display = 'none';
+        } else {
+            loginForm.style.display = 'none';
+            regForm.style.display = 'block';
+        }
+    }
+    function closeAuth() { modal.classList.remove('active'); }
+    window.onclick = function(e) { if (e.target == modal) closeAuth(); }
+
+    // 4. Xử lý Music
+    const audio = document.getElementById("myAudio");
+    const musicBtn = document.getElementById("musicBtn");
+    let playing = false;
+    function toggleMusic() {
+        if (!playing) { 
+            audio.play(); 
+            musicBtn.classList.add('playing'); 
+            musicBtn.innerHTML = '<i class="fas fa-pause"></i>'; 
+        } else { 
+            audio.pause(); 
+            musicBtn.classList.remove('playing'); 
+            musicBtn.innerHTML = '<i class="fas fa-music"></i>'; 
+        }
+        playing = !playing;
+    }
+</script>
+</body>
+</html>
