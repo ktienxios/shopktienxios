@@ -26,7 +26,7 @@
         font-family: 'Plus Jakarta Sans', sans-serif;
         background-color: var(--dark-bg); color: var(--text-main);
         background-image: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 50%);
-        min-height: 100vh; line-height: 1.6; padding-bottom: 80px; /* Tăng padding để không đè lên nhạc */
+        min-height: 100vh; line-height: 1.6; padding-bottom: 80px; 
     }
 
     .container { max-width: 500px; margin: 0 auto; padding: 20px; position: relative; z-index: 2; }
@@ -112,7 +112,6 @@
         display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.75rem; flex-shrink: 0; font-weight: 700;
     }
 
-    /* --- MUSIC PLAYER STYLE --- */
     .music-player {
         position: fixed; bottom: 30px; left: 30px; z-index: 999;
         display: flex; align-items: center; gap: 15px;
@@ -159,16 +158,10 @@
 
     <div class="section-card">
         <div class="info-item">
-            <div class="info-content">
-                <div class="info-label">Ngân hàng</div>
-                <div class="info-value">BIDV</div>
-            </div>
+            <div class="info-content"><div class="info-label">Ngân hàng</div><div class="info-value">BIDV</div></div>
         </div>
         <div class="info-item">
-            <div class="info-content">
-                <div class="info-label">Chủ tài khoản</div>
-                <div class="info-value">KIEU ANH TIEN</div>
-            </div>
+            <div class="info-content"><div class="info-label">Chủ tài khoản</div><div class="info-value">KIEU ANH TIEN</div></div>
         </div>
         <div class="info-item">
             <div class="info-content">
@@ -195,7 +188,8 @@
             <div class="price-item" onclick="setAmount(500000)">500.000đ</div>
         </div>
 
-        <button class="btn-success" onclick="sendToAdmin()">
+        <!-- ID cho nút bấm để vô hiệu hóa khi đang chờ -->
+        <button class="btn-success" id="submitBtn" onclick="sendToAdmin()">
             <i class="fas fa-check-circle"></i> ĐÃ CHUYỂN KHOẢN
         </button>
         
@@ -214,28 +208,17 @@
     </div>
 </div>
 
-<!-- Music Player -->
 <div class="music-player" id="musicContainer">
     <div class="music-info">
         <div style="font-size: 11px; font-weight: 700; white-space: nowrap; color: #fff;">BGM - KTIENXIOS</div>
-        <div class="progress-container" id="progressContainer">
-            <div class="progress-bar" id="progressBar"></div>
-        </div>
-        <div class="time-display">
-            <span id="currTime">0:00</span>
-            <span id="durTime">0:00</span>
-        </div>
+        <div class="progress-container" id="progressContainer"><div class="progress-bar" id="progressBar"></div></div>
+        <div class="time-display"><span id="currTime">0:00</span><span id="durTime">0:00</span></div>
     </div>
-    <audio id="myAudio" loop>
-        <source src="https://scared-aquamarine-wzjsbpfpzz.edgeone.app/snaptt.me-48765111.mp3" type="audio/mpeg">
-    </audio>
-    <button class="music-btn" onclick="toggleMusic()" id="musicBtn">
-        <i class="fas fa-music"></i>
-    </button>
+    <audio id="myAudio" loop><source src="https://scared-aquamarine-wzjsbpfpzz.edgeone.app/snaptt.me-48765111.mp3" type="audio/mpeg"></audio>
+    <button class="music-btn" onclick="toggleMusic()" id="musicBtn"><i class="fas fa-music"></i></button>
 </div>
 
 <script>
-    // --- CẤU HÌNH FIREBASE ---
     const firebaseConfig = {
         apiKey: "AIzaSyDWe6sAcxUyis87c8GPLFwo5Z0zS3eO-34",
         authDomain: "severupdate-1b36a.firebaseapp.com",
@@ -254,89 +237,86 @@
     const BANK_ID = "BIDV";
     const ACCOUNT_NO = "0782275997";
     const ACCOUNT_NAME = "KIEU ANH TIEN";
-    // Link ảnh QR của ông làm ảnh nền khi đang load
     const DEFAULT_QR = "https://cdn.phototourl.com/member/2026-05-01-1a7989b2-845d-4978-97ab-c13f5c068c0b.jpg";
 
-    function setAmount(val) {
-        document.getElementById('inputAmount').value = val;
-        generateQR();
-    }
-
-    function generateMemo() {
-        const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ';
-        return `KTIEN${chars.charAt(Math.floor(Math.random() * chars.length))}${Math.floor(100 + Math.random() * 900)}`; 
-    }
+    function setAmount(val) { document.getElementById('inputAmount').value = val; generateQR(); }
+    function generateMemo() { const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ'; return `KTIEN${chars.charAt(Math.floor(Math.random() * chars.length))}${Math.floor(100 + Math.random() * 900)}`; }
 
     function generateQR() {
         const amount = document.getElementById('inputAmount').value || 50000;
         const memo = generateMemo();
         document.getElementById('noidung').innerText = memo;
-        
-        // Tạo link VietQR động
         const qrUrl = `https://img.vietqr.io/image/${BANK_ID}-${ACCOUNT_NO}-compact2.png?amount=${amount}&addInfo=${memo}&accountName=${encodeURIComponent(ACCOUNT_NAME)}`;
-        
         const qrImg = document.getElementById('qr-image');
-        qrImg.style.opacity = '0.5'; // Làm mờ nhẹ khi đang đổi mã
+        qrImg.style.opacity = '0.5';
         qrImg.src = qrUrl;
-        
-        qrImg.onload = () => { 
-            qrImg.style.opacity = '1'; 
-        };
-
-        // Nếu lỗi load API thì hiện cái ảnh backup của ông
-        qrImg.onerror = () => {
-            qrImg.src = DEFAULT_QR;
-            qrImg.style.opacity = '1';
-        };
-        
+        qrImg.onload = () => { qrImg.style.opacity = '1'; };
+        qrImg.onerror = () => { qrImg.src = DEFAULT_QR; qrImg.style.opacity = '1'; };
         timeLeft = 120; 
     }
 
-    // --- QUAN TRỌNG: Gọi hàm ngay khi load trang ---
     window.onload = () => {
-        generateQR(); // Phải có cái này QR mới hiện ngay lúc đầu
-        
-        // Check số dư
+        generateQR();
         auth.onAuthStateChanged(user => {
             if (user) {
                 const safeEmail = user.email.replace(/\./g, '_');
                 database.ref('Users/' + safeEmail + '/balance').on('value', (snap) => {
-                    const balance = snap.val() || 0;
-                    document.getElementById('current-balance').innerText = balance.toLocaleString() + 'đ';
+                    document.getElementById('current-balance').innerText = (snap.val() || 0).toLocaleString() + 'đ';
                 });
-            } else {
-                document.getElementById('current-balance').innerText = 'Chưa đăng nhập';
             }
         });
     };
 
-    // Đếm ngược
     setInterval(() => {
-        if (timeLeft > 0) {
-            timeLeft--;
-            document.getElementById('countdown').innerText = timeLeft;
-        } else {
-            generateQR();
-        }
+        if (timeLeft > 0) { timeLeft--; document.getElementById('countdown').innerText = timeLeft; }
+        else { generateQR(); }
     }, 1000);
 
+    // --- SỬA LOGIC NÀY ĐỂ TỰ ĐỘNG CHUYỂN TRANG ---
     async function sendToAdmin() {
         const amount = document.getElementById('inputAmount').value;
         const memo = document.getElementById('noidung').innerText;
         const user = auth.currentUser;
+        const submitBtn = document.getElementById('submitBtn');
+
         if (!user) { alert("Vui lòng đăng nhập!"); return; }
 
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ĐANG CHỜ ADMIN DUYỆT...';
+
         try {
-            await database.ref('RechargeRequests').push({
+            // Tạo một node mới trong RechargeRequests
+            const newRequestRef = database.ref('RechargeRequests').push();
+            const requestId = newRequestRef.key;
+
+            await newRequestRef.set({
+                id: requestId,
                 email: user.email,
                 amount: parseInt(amount),
                 content: memo,
                 date: new Date().toLocaleString('vi-VN'),
                 status: 'pending'
             });
-            alert(`✅ Đã gửi yêu cầu!\nAdmin đang check bill, đợi tí nhé.`);
+
+            alert(`✅ Đã gửi yêu cầu!\nVui lòng giữ trang này, hệ thống sẽ tự động quay về trang chủ khi Admin duyệt tiền.`);
+
+            // Lắng nghe sự thay đổi của yêu cầu này
+            database.ref('RechargeRequests/' + requestId).on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data && data.status === 'success') {
+                    alert("💰 Nạp tiền thành công! Đang quay lại...");
+                    window.location.href = "dashboard.html";
+                } else if (data && data.status === 'rejected') {
+                    alert("❌ Giao dịch bị từ chối.");
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> ĐÃ CHUYỂN KHOẢN';
+                }
+            });
+
         } catch (error) {
             alert("Lỗi: " + error.message);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> ĐÃ CHUYỂN KHOẢN';
         }
     }
 
@@ -345,67 +325,28 @@
         navigator.clipboard.writeText(text).then(() => alert("Đã copy: " + text));
     }
 
-    // --- LOGIC NHẠC ---
-    // --- LOGIC NHẠC (ĐÃ FIX THANH THỜI GIAN) ---
+    // --- NHẠC ---
     const audio = document.getElementById("myAudio");
     const musicBtn = document.getElementById("musicBtn");
     const musicContainer = document.getElementById("musicContainer");
     const progressBar = document.getElementById("progressBar");
-    const currTime = document.getElementById("currTime");
-    const durTime = document.getElementById("durTime");
 
-    // Hàm định dạng thời gian (giây -> phút:giây)
-    function formatTime(seconds) {
-        let min = Math.floor(seconds / 60);
-        let sec = Math.floor(seconds % 60);
-        return `${min}:${sec < 10 ? '0' + sec : sec}`;
-    }
+    function formatTime(s) { let m = Math.floor(s/60); let sec = Math.floor(s%60); return `${m}:${sec<10?'0'+sec:sec}`; }
 
     function toggleMusic() {
-        if (audio.paused) {
-            audio.play();
-            musicBtn.classList.add('playing');
-            musicContainer.classList.add('active');
-        } else {
-            audio.pause();
-            musicBtn.classList.remove('playing');
-            musicContainer.classList.remove('active');
-        }
+        if (audio.paused) { audio.play(); musicBtn.classList.add('playing'); musicContainer.classList.add('active'); }
+        else { audio.pause(); musicBtn.classList.remove('playing'); musicContainer.classList.remove('active'); }
     }
 
-    // Cập nhật thanh tiến trình và thời gian liên tục
     audio.addEventListener('timeupdate', () => {
-        // 1. Cập nhật thanh Bar
-        const progress = (audio.currentTime / audio.duration) * 100;
-        progressBar.style.width = `${progress}%`;
-
-        // 2. Cập nhật số phút đang chạy
-        currTime.innerText = formatTime(audio.currentTime);
-        
-        // 3. Lưu lại thời gian để chuyển trang không bị mất
+        progressBar.style.width = `${(audio.currentTime / audio.duration) * 100}%`;
+        document.getElementById('currTime').innerText = formatTime(audio.currentTime);
         localStorage.setItem('musicTime', audio.currentTime);
     });
 
-    // Khi nhạc load xong dữ liệu thì hiện tổng thời gian
-    audio.addEventListener('loadedmetadata', () => {
-        durTime.innerText = formatTime(audio.duration);
-    });
-
-    // Tự động nổ nhạc khi chạm màn hình (Fix chính sách trình duyệt)
-    document.addEventListener('click', () => {
-        if(audio.paused) {
-            audio.play().then(() => {
-                musicBtn.classList.add('playing');
-                musicContainer.classList.add('active');
-            }).catch(()=>{});
-        }
-    }, { once: true });
-
-    // Khôi phục trạng thái khi load lại trang
-    window.addEventListener('load', () => {
-        const savedTime = localStorage.getItem('musicTime');
-        if (savedTime) audio.currentTime = parseFloat(savedTime);
-    });
+    audio.addEventListener('loadedmetadata', () => { document.getElementById('durTime').innerText = formatTime(audio.duration); });
+    document.addEventListener('click', () => { if(audio.paused) audio.play().then(() => { musicBtn.classList.add('playing'); musicContainer.classList.add('active'); }).catch(()=>{}); }, { once: true });
+    window.addEventListener('load', () => { const savedTime = localStorage.getItem('musicTime'); if (savedTime) audio.currentTime = parseFloat(savedTime); });
 </script>
 </body>
 </html>
