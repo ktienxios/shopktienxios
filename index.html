@@ -197,7 +197,7 @@
     <!-- Music Player -->
     <div class="music-player" id="musicContainer">
         <div class="music-info">
-            <div style="font-size: 11px; font-weight: 700; white-space: nowrap;">BGM - KTIENXIOS</div>
+            <div id="musicTitleText" style="font-size: 11px; font-weight: 700; white-space: nowrap;">BGM - KTIENXIOS</div>
             <div class="progress-container" id="progressContainer">
                 <div class="progress-bar" id="progressBar"></div>
             </div>
@@ -207,7 +207,7 @@
             </div>
         </div>
         <audio id="myAudio" loop>
-            <source src="https://scared-aquamarine-wzjsbpfpzz.edgeone.app/snaptt.me-48765111.mp3" type="audio/mpeg">
+            <source src="" type="audio/mpeg">
         </audio>
         <button class="music-btn" onclick="toggleMusic()" id="musicBtn">
             <i class="fas fa-music"></i>
@@ -225,7 +225,7 @@
 <script src="products.js"></script>
 
 <script>
-    // 1. Hiệu ứng cuộn trang (Reveal)
+    // --- 1. HIỆU ỨNG CUỘN (REVEAL) ---
     function reveal() {
         document.querySelectorAll(".reveal").forEach(r => {
             if (r.getBoundingClientRect().top < window.innerHeight - 80) r.classList.add("active");
@@ -233,7 +233,7 @@
     }
     window.addEventListener("scroll", reveal);
 
-    // 2. Tự động đổ hàng từ products.js
+    // --- 2. RENDER SẢN PHẨM TỪ PRODUCTS.JS ---
     function renderHomeProducts() {
         const container = document.getElementById('productContainer');
         if(!container || typeof KTIENXIOS_PRODUCTS === 'undefined') return;
@@ -252,14 +252,12 @@
             }
 
             html += `
-                <div class="p-card">
+                <div class="p-card reveal">
                     <img src="${p.img}" class="p-img">
                     ${p.hot ? '<div style="position:absolute; top:20px; right:20px; background:var(--primary); color:#fff; padding:5px 12px; border-radius:50px; font-size:0.7rem; font-weight:800;">HOT</div>' : ''}
                     <h3>${p.name}</h3>
                     <p style="color:var(--text-sub); font-size:0.95rem; margin-bottom:15px;">${p.desc}</p>
-                    
                     ${optionsHtml}
-
                     <div style="font-weight:800; color:var(--primary); margin-bottom:15px; font-size: 1.2rem;">
                         Giá: <span id="price-${p.id}">${p.options ? p.options[0].price : p.price}</span>
                     </div>
@@ -267,133 +265,96 @@
                 </div>`;
         });
         container.innerHTML = html;
-        reveal();
+        setTimeout(reveal, 100);
     }
 
     function updatePrice(selectElement, productId) {
         const priceDisplay = document.getElementById(`price-${productId}`);
-        if (priceDisplay) {
-            priceDisplay.innerText = selectElement.value;
-        }
+        if (priceDisplay) priceDisplay.innerText = selectElement.value;
     }
 
     function openAuth(type) {
         window.location.href = (type === 'login') ? 'login.html' : 'signup.html';
     }
 
-// --- LOGIC KHỞI TẠO HỆ THỐNG (INDEX) ---
-const audio = document.getElementById("myAudio");
-const musicBtn = document.getElementById("musicBtn");
-const musicContainer = document.getElementById("musicContainer");
+    // --- 3. LOGIC NHẠC (CHẠM LÀ PHÁT) ---
+    const audio = document.getElementById("myAudio");
+    const musicBtn = document.getElementById("musicBtn");
+    const musicContainer = document.getElementById("musicContainer");
 
-// 1. Cấu hình nguồn nhạc từ products.js
-if (typeof KTIENXIOS_CONFIG !== 'undefined') {
-    const musicSource = audio.querySelector('source');
-    musicSource.src = KTIENXIOS_CONFIG.musicUrl;
-    audio.load();
-    
-    const titleDisplay = document.querySelector('.music-info div');
-    if (titleDisplay) titleDisplay.innerText = KTIENXIOS_CONFIG.musicTitle;
-}
-
-// 2. Hàm hiển thị sản phẩm (Render)
-function renderHomeProducts() {
-    const container = document.getElementById('productContainer');
-    // Kiểm tra xem biến KTIENXIOS_PRODUCTS có tồn tại không
-    if(!container || typeof KTIENXIOS_PRODUCTS === 'undefined') {
-        console.error("Lỗi: Không tìm thấy dữ liệu sản phẩm!");
-        return;
-    }
-    
-    let html = '';
-    KTIENXIOS_PRODUCTS.forEach(p => {
-        let optionsHtml = '';
-        if (p.options && p.options.length > 0) {
-            optionsHtml = `
-                <div style="margin-bottom: 15px;">
-                    <label style="font-size: 0.8rem; color: var(--text-sub);">Chọn gói dịch vụ:</label>
-                    <select onchange="updatePrice(this, '${p.id}')" style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--glass-border); outline: none; margin-top: 5px; cursor: pointer;">
-                        ${p.options.map(opt => `<option value="${opt.price}">${opt.label}</option>`).join('')}
-                    </select>
-                </div>`;
+    function initMusicConfig() {
+        if (typeof KTIENXIOS_CONFIG !== 'undefined') {
+            audio.querySelector('source').src = KTIENXIOS_CONFIG.musicUrl;
+            audio.load();
+            const titleBox = document.getElementById('musicTitleText');
+            if (titleBox) titleBox.innerText = KTIENXIOS_CONFIG.musicTitle;
         }
+    }
 
-        html += `
-            <div class="p-card reveal">
-                <img src="${p.img}" class="p-img">
-                ${p.hot ? '<div style="position:absolute; top:20px; right:20px; background:var(--primary); color:#fff; padding:5px 12px; border-radius:50px; font-size:0.7rem; font-weight:800;">HOT</div>' : ''}
-                <h3 style="margin-bottom:10px;">${p.name}</h3>
-                <p style="color:var(--text-sub); font-size:0.95rem; margin-bottom:15px;">${p.desc}</p>
-                
-                ${optionsHtml}
+    function updateMusicUI(isPlaying) {
+        if (isPlaying) {
+            musicBtn.classList.add('playing');
+            musicBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            musicContainer.classList.add('active');
+        } else {
+            musicBtn.classList.remove('playing');
+            musicBtn.innerHTML = '<i class="fas fa-music"></i>';
+            musicContainer.classList.remove('active');
+        }
+    }
 
-                <div style="font-weight:800; color:var(--primary); margin-bottom:15px; font-size: 1.2rem;">
-                    Giá: <span id="price-${p.id}">${p.options ? p.options[0].price : p.price}</span>
-                </div>
-                <button onclick="openAuth('login')" class="btn-lnd btn-primary" style="width:100%;">MUA NGAY</button>
-            </div>`;
+    // Hàm "kích nổ" nhạc khi có bất kỳ tương tác nào
+    function triggerMusic() {
+        if (!audio.paused) return; // Nếu đang chạy rồi thì bỏ qua
+        
+        audio.play().then(() => {
+            localStorage.setItem('musicPlaying', 'true');
+            updateMusicUI(true);
+            // Gỡ bỏ các sự kiện sau khi thành công
+            ['click', 'touchstart', 'mousedown', 'pointerdown', 'scroll'].forEach(e => 
+                document.removeEventListener(e, triggerMusic)
+            );
+        }).catch(() => {
+            console.log("Browser waiting for more interaction...");
+        });
+    }
+
+    function toggleMusic() {
+        if (audio.paused) {
+            audio.play();
+            localStorage.setItem('musicPlaying', 'true');
+            updateMusicUI(true);
+        } else {
+            audio.pause();
+            localStorage.setItem('musicPlaying', 'false');
+            updateMusicUI(false);
+        }
+    }
+
+    // --- 4. KÍCH HOẠT HỆ THỐNG KHI LOAD XONG ---
+    window.addEventListener('load', () => {
+        // Khởi tạo sản phẩm và nhạc
+        renderHomeProducts();
+        initMusicConfig();
+
+        // Khôi phục vị trí nhạc
+        const savedTime = localStorage.getItem('musicTime');
+        if (savedTime) audio.currentTime = parseFloat(savedTime);
+        
+        // Đăng ký lắng nghe tương tác để phát nhạc
+        if (localStorage.getItem('musicPlaying') !== 'false') {
+            ['click', 'touchstart', 'mousedown', 'pointerdown', 'scroll'].forEach(e => 
+                document.addEventListener(e, triggerMusic, { once: false })
+            );
+        }
     });
-    container.innerHTML = html;
-    
-    // Sau khi render xong thì chạy hiệu ứng hiện hình (reveal)
-    setTimeout(reveal, 100); 
-}
 
-// 3. Logic Nhạc (Tự động phát khi chạm)
-function updateMusicUI(isPlaying) {
-    if (isPlaying) {
-        musicBtn.classList.add('playing');
-        musicBtn.innerHTML = '<i class="fas fa-pause"></i>';
-        if(musicContainer) musicContainer.classList.add('active');
-    } else {
-        musicBtn.classList.remove('playing');
-        musicBtn.innerHTML = '<i class="fas fa-music"></i>';
-        if(musicContainer) musicContainer.classList.remove('active');
-    }
-}
-
-function playMusic() {
-    audio.play().then(() => {
-        localStorage.setItem('musicPlaying', 'true');
-        updateMusicUI(true);
-        document.removeEventListener('click', playMusic);
-        document.removeEventListener('touchstart', playMusic);
-    }).catch(() => {});
-}
-
-function toggleMusic() {
-    if (audio.paused) {
-        audio.play();
-        localStorage.setItem('musicPlaying', 'true');
-        updateMusicUI(true);
-    } else {
-        audio.pause();
-        localStorage.setItem('musicPlaying', 'false');
-        updateMusicUI(false);
-    }
-}
-
-// --- 4. KÍCH HOẠT KHI TRANG LOAD XONG ---
-window.addEventListener('load', () => {
-    // Đổ dữ liệu sản phẩm
-    renderHomeProducts(); 
-
-    // Khôi phục trạng thái nhạc
-    const savedTime = localStorage.getItem('musicTime');
-    const isPlaying = localStorage.getItem('musicPlaying');
-    if (savedTime) audio.currentTime = parseFloat(savedTime);
-    
-    if (isPlaying === 'true') {
-        playMusic();
-    } else {
-        document.addEventListener('click', playMusic);
-        document.addEventListener('touchstart', playMusic);
-    }
-});
-
-audio.addEventListener('timeupdate', () => {
-    localStorage.setItem('musicTime', audio.currentTime);
-});
+    audio.addEventListener('timeupdate', () => {
+        localStorage.setItem('musicTime', audio.currentTime);
+        // Cập nhật thanh tiến trình nếu ông muốn (option)
+        const progress = (audio.currentTime / audio.duration) * 100;
+        document.getElementById('progressBar').style.width = progress + "%";
+    });
 </script>
 </body>
 </html>
