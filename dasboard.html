@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KTIENXIOS - Dashboard Hệ Thống</title>
+    <link rel="icon" type="image/x-icon" href="https://tedexe.shop/assets/images/tedfa.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+    /* --- CSS SYSTEM --- */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; overflow-x: hidden; background-color: #020617; scroll-behavior: smooth; }
+    :root {
+        --primary: #06b6d4; --secondary: #3b82f6; --dark-bg: #020617; 
+        --card-bg: rgba(15, 23, 42, 0.7); --glass-border: rgba(6, 182, 212, 0.25); 
+        --text-main: #f8fafc; --text-sub: #94a3b8;
+    }
+
+    .lnd-body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background-color: var(--dark-bg); color: var(--text-main);
+        background-image: radial-gradient(circle at 10% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 40%),
+            radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 40%),
+            linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
+        background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+        min-height: 100vh;
+    }
+    
+    .lnd-container { max-width: 1200px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 2; }
+    
+    @keyframes slide-up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+    .lnd-nav {
+        position: fixed; top: 0; left: 0; right: 0; height: 70px; z-index: 1000;
+        background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(15px); border-bottom: 1px solid var(--glass-border);
+    }
+    .lnd-nav .lnd-container { height: 100%; display: flex; justify-content: space-between; align-items: center; }
+    .logo-text { font-weight: 800; font-size: 1.4rem; background: linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    .btn-menu {
+        padding: 10px 20px; border-radius: 12px; font-weight: 700;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px;
+        transition: 0.3s; box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+    }
+
+    .user-sidebar {
+        position: fixed; top: 0; right: -300px; width: 300px; height: 100%;
+        background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px);
+        border-left: 1px solid var(--glass-border); z-index: 3000;
+        padding: 40px 25px; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .user-sidebar.active { right: 0; }
+    
+    .sidebar-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); z-index: 2999; display: none;
+    }
+    .sidebar-overlay.active { display: block; }
+
+    .menu-link {
+        display: flex; align-items: center; gap: 15px; padding: 15px;
+        color: var(--text-main); text-decoration: none; border-radius: 12px;
+        margin-bottom: 10px; transition: 0.3s; font-weight: 600;
+        background: rgba(255,255,255,0.02); border: 1px solid transparent;
+    }
+    .menu-link:hover { background: rgba(6, 182, 212, 0.1); border-color: var(--glass-border); color: var(--primary); }
+
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 40px; }
+    .p-card { background: var(--card-bg); border: 1px solid var(--glass-border); padding: 25px; border-radius: 24px; transition: 0.4s; backdrop-filter: blur(10px); position: relative; overflow: hidden; }
+    .p-img { width: 100%; height: 180px; object-fit: cover; border-radius: 16px; margin-bottom: 20px; }
+    
+    .btn-lnd { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 32px; border-radius: 14px; font-weight: 700; text-decoration: none; transition: 0.4s; cursor: pointer; border: none; }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; width: 100%; }
+
+    .reveal { opacity: 0; transform: translateY(40px); transition: 0.8s ease-out; }
+    .reveal.active { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="lnd-body">
+    <nav class="lnd-nav">
+        <div class="lnd-container">
+            <a href="dashboard.html" style="text-decoration:none; display:flex; align-items:center; gap:8px;">
+                <div style="width:32px; height:32px; background:linear-gradient(135deg, var(--primary), var(--secondary)); border-radius:8px; display:flex; align-items:center; justify-content:center;">
+                    <i class="fas fa-bolt" style="color: #fff; font-size: 0.9rem;"></i>
+                </div>
+                <span class="logo-text">KTIENXIOS</span>
+            </a>
+            <button class="btn-menu" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i> MENU
+            </button>
+        </div>
+    </nav>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+    <div class="user-sidebar" id="userSidebar">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="width: 70px; height: 70px; background: rgba(6, 182, 212, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; border: 2px solid var(--primary);">
+                <i class="fas fa-user-astronaut" style="font-size: 2rem; color: var(--primary);"></i>
+            </div>
+            <h3 style="color: #fff;">Chào, KTIENXIOS!</h3>
+            <p style="color: #fbbf24; font-weight: 800; font-size: 0.9rem;">Số dư: 500.000đ</p>
+        </div>
+
+        <nav>
+            <a href="#" class="menu-link"><i class="fas fa-wallet"></i> Nạp Tiền Bank</a>
+            <a href="#" class="menu-link"><i class="fas fa-shopping-cart"></i> Mua Sản Phẩm</a>
+            <a href="#" class="menu-link"><i class="fas fa-history"></i> Lịch Sử Mua</a>
+            <a href="index.html" class="menu-link" style="margin-top: 50px; color: #ef4444;"><i class="fas fa-sign-out-alt"></i> Đăng Xuất</a>
+        </nav>
+    </div>
+
+    <section class="lnd-hero" style="padding: 140px 0 40px;">
+        <div class="lnd-container">
+            <h1 class="hero-title reveal">XIN CHÀO, <span>KTIENXIOS</span></h1>
+            <p class="reveal" style="color:var(--text-sub); margin-bottom:20px;">Chào mừng ông giáo! Hãy chọn dịch vụ và trải nghiệm nhé.</p>
+        </div>
+    </section>
+
+    <section class="lnd-container reveal" style="padding-bottom:100px;">
+        <!-- NƠI ĐỔ DỮ LIỆU TỪ products.js -->
+        <div class="product-grid" id="dashboardProductList"></div>
+    </section>
+
+    <footer style="padding:40px 0; text-align:center; border-top:1px solid var(--glass-border);">
+        <p style="color:var(--text-sub); font-size:0.9rem;">&copy; 2026 KTIENXIOS - Dashboard.</p>
+    </footer>
+</div>
+
+<!-- GỌI FILE DỮ LIỆU CHUNG -->
+<script src="products.js"></script>
+
+<script>
+    // 1. Reveal effect
+    function reveal() {
+        document.querySelectorAll(".reveal").forEach(r => {
+            if (r.getBoundingClientRect().top < window.innerHeight - 80) r.classList.add("active");
+        });
+    }
+    window.addEventListener("scroll", reveal);
+
+    // 2. Sidebar Toggle
+    function toggleSidebar() {
+        document.getElementById('userSidebar').classList.toggle('active');
+        document.getElementById('overlay').classList.toggle('active');
+    }
+
+    // 3. Render sản phẩm cho Dashboard
+    function renderDashboardProducts() {
+        const container = document.getElementById('dashboardProductList'); 
+        if(!container || typeof KTIENXIOS_PRODUCTS === 'undefined') return;
+
+        let html = '';
+        KTIENXIOS_PRODUCTS.forEach(p => {
+            html += `
+                <div class="p-card">
+                    <img src="${p.img}" class="p-img">
+                    <div style="position:absolute; top:20px; right:20px; background:var(--primary); color:#fff; padding:5px 12px; border-radius:50px; font-size:0.7rem; font-weight:800;">${p.price}</div>
+                    <h3>${p.name}</h3>
+                    <p style="color:var(--text-sub); font-size:0.9rem; margin-bottom:15px; min-height:40px;">${p.desc}</p>
+                    <button onclick="payProduct(${p.id})" class="btn-lnd btn-primary">MUA NGAY</button>
+                </div>`;
+        });
+        container.innerHTML = html;
+        reveal();
+    }
+    
+    // 4. Xử lý mua hàng
+    function payProduct(id) {
+        const product = KTIENXIOS_PRODUCTS.find(item => item.id === id);
+        const check = confirm(`Ông giáo có chắc muốn thanh toán ${product.price} cho ${product.name} không?`);
+        if(check) {
+            alert("Giao dịch thành công! Vui lòng kiểm tra lịch sử.");
+        }
+    }
+
+    window.addEventListener('load', () => {
+        renderDashboardProducts();
+        reveal();
+    });
+</script>
+</body>
+</html>
