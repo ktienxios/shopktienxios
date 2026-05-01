@@ -3,89 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lịch Sử Giao Dịch - KTIENXIOS System</title>
+    <title>Lịch Sử Giao Dịch - KTIENXIOS</title>
     <link rel="icon" type="image/x-icon" href="https://tedexe.shop/assets/images/tedfa.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-database-compat.js"></script>
 
 <style>
-    /* --- CSS CORE (Giữ nguyên để đồng bộ hệ thống) --- */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
         --primary: #06b6d4; --secondary: #3b82f6; --dark-bg: #020617; 
-        --card-bg: rgba(30, 41, 59, 0.5); --glass-border: rgba(255, 255, 255, 0.08);
+        --card-bg: rgba(30, 41, 59, 0.5); --glass-border: rgba(255, 255, 255, 0.1);
         --text-main: #f8fafc; --text-sub: #94a3b8;
     }
-
     body {
         font-family: 'Plus Jakarta Sans', sans-serif;
         background-color: var(--dark-bg); color: var(--text-main);
         background-image: radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
-        min-height: 100vh; padding-bottom: 50px;
+        min-height: 100vh; overflow-x: hidden; padding-bottom: 80px;
+    }
+    .container { max-width: 600px; margin: 0 auto; padding: 15px; }
+    
+    .header { margin-bottom: 20px; padding-top: 10px; display: flex; align-items: center; gap: 12px; }
+    .header h1 { font-size: 1.3rem; font-weight: 800; }
+    .back-btn { width: 38px; height: 38px; border-radius: 10px; background: var(--card-bg); border: 1px solid var(--glass-border); color: #fff; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+
+    /* Tab System */
+    .tab-container {
+        display: flex; background: rgba(0,0,0,0.2); border-radius: 14px;
+        padding: 5px; margin-bottom: 20px; border: 1px solid var(--glass-border);
+    }
+    .tab-btn {
+        flex: 1; padding: 10px; border: none; background: transparent;
+        color: var(--text-sub); font-weight: 700; font-size: 0.85rem;
+        cursor: pointer; border-radius: 10px; transition: 0.3s;
+    }
+    .tab-btn.active {
+        background: var(--primary); color: white;
+        box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
     }
 
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-
-    /* Header Section */
-    .header { margin-bottom: 30px; padding-top: 20px; display: flex; align-items: center; justify-content: space-between; }
-    .header h1 { font-size: 1.5rem; font-weight: 800; }
-    .header h1 span { color: var(--primary); }
-    .back-btn {
-        width: 40px; height: 40px; border-radius: 12px; background: var(--card-bg);
-        border: 1px solid var(--glass-border); color: #fff; display: flex; 
-        align-items: center; justify-content: center; text-decoration: none;
-    }
-
-    /* Filter Tabs (Chỉ để làm cảnh cho đẹp, ông có thể code thêm logic sau) */
-    .filter-tabs {
-        display: flex; gap: 10px; margin-bottom: 25px; overflow-x: auto; padding-bottom: 5px;
-    }
-    .tab {
-        white-space: nowrap; padding: 8px 18px; border-radius: 50px;
-        background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
-        font-size: 0.85rem; font-weight: 600; color: var(--text-sub); cursor: pointer;
-    }
-    .tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-
-    /* History Card List */
-    .history-card {
+    /* History Items */
+    .history-item {
         background: var(--card-bg); border: 1px solid var(--glass-border);
-        border-radius: 22px; padding: 20px; margin-bottom: 15px;
-        backdrop-filter: blur(10px); transition: 0.3s;
+        border-radius: 16px; padding: 12px; margin-bottom: 12px;
+        display: flex; align-items: center; gap: 12px; backdrop-filter: blur(10px);
     }
-    .history-card:hover { border-color: rgba(6, 182, 212, 0.4); transform: translateY(-2px); }
 
-    .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-    .service-info { display: flex; gap: 15px; align-items: center; }
-    .service-icon {
-        width: 48px; height: 48px; border-radius: 14px; background: rgba(59, 130, 246, 0.1);
-        display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--secondary);
+    /* Item Key Mua */
+    .download-square {
+        min-width: 50px; height: 50px;
+        background: linear-gradient(135deg, var(--primary), #3b82f6);
+        border-radius: 10px; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; color: white;
+        text-decoration: none; font-size: 0.55rem; font-weight: 800; text-align: center; flex-shrink: 0;
     }
-    .service-name { font-weight: 700; font-size: 1rem; margin-bottom: 2px; }
-    .order-id { font-size: 0.75rem; color: var(--text-sub); }
+    .download-square i { font-size: 1.1rem; margin-bottom: 1px; }
 
-    /* Status Badges */
-    .status {
-        padding: 5px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
+    /* Item Nạp Tiền */
+    .recharge-icon {
+        min-width: 50px; height: 50px; background: rgba(16, 185, 129, 0.1);
+        border-radius: 10px; display: flex; align-items: center; justify-content: center;
+        color: #10b981; font-size: 1.2rem; border: 1px solid rgba(16, 185, 129, 0.2);
     }
-    .status.success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-    .status.pending { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-    .status.failed { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
 
-    .card-details {
-        display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-        padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05);
+    .info-box { flex-grow: 1; min-width: 0; } 
+    .title-text { font-weight: 700; font-size: 0.85rem; color: #fff; margin-bottom: 4px; }
+    .sub-text { font-size: 0.7rem; color: var(--text-sub); }
+
+    .key-badge { 
+        display: inline-flex; align-items: center; gap: 6px; 
+        background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 6px; 
+        margin-top: 5px; border: 1px solid rgba(255,255,255,0.05);
     }
-    .detail-box { display: flex; flex-direction: column; }
-    .detail-label { font-size: 0.7rem; color: var(--text-sub); margin-bottom: 2px; }
-    .detail-value { font-size: 0.9rem; font-weight: 600; }
-
-    /* Empty State */
-    .empty-state {
-        text-align: center; padding: 50px 20px; color: var(--text-sub);
+    .key-text { font-family: monospace; color: #4ade80; font-size: 0.7rem; font-weight: 700; }
+    
+    .status-box { 
+        min-width: 80px; text-align: right; border-left: 1px solid rgba(255,255,255,0.1);
+        padding-left: 8px; flex-shrink: 0;
     }
-    .empty-state i { font-size: 3rem; margin-bottom: 15px; opacity: 0.3; }
+    .status-label { font-size: 0.55rem; color: var(--text-sub); display: block; }
+    .status-value { font-weight: 800; font-size: 0.8rem; }
 
+    .empty-msg { text-align: center; padding: 40px; color: var(--text-sub); font-size: 0.9rem; }
+
+    /* Music Player */
+    .music-player {
+        position: fixed; bottom: 20px; left: 20px; z-index: 999;
+        display: flex; align-items: center; gap: 12px;
+        background: rgba(15, 23, 42, 0.8); padding: 8px 12px; border-radius: 50px;
+        border: 1px solid var(--glass-border); backdrop-filter: blur(10px);
+        transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .music-info { width: 0; overflow: hidden; opacity: 0; transition: 0.5s; display: flex; flex-direction: column; gap: 4px; }
+    .music-player.active .music-info { width: 140px; opacity: 1; }
+    .music-btn {
+        width: 40px; height: 40px; border-radius: 50%; 
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    @keyframes pulse-glow { 0% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(6, 182, 212, 0); } 100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); } }
+    .playing { animation: pulse-glow 2s infinite; }
 </style>
 </head>
 <body>
@@ -93,107 +114,219 @@
 <div class="container">
     <header class="header">
         <a href="dashboard.html" class="back-btn"><i class="fas fa-chevron-left"></i></a>
-        <h1>Lịch sử <span>Giao dịch</span></h1>
-        <div style="width: 40px;"></div> <!-- Giữ cân bằng layout -->
+        <h1>Lịch Sử Giao Dịch</h1>
     </header>
 
-    <!-- Bộ lọc -->
-    <div class="filter-tabs">
-        <div class="tab active">Tất cả</div>
-        <div class="tab">Nạp tiền</div>
-        <div class="tab">Mua Key</div>
-        <div class="tab">Gia hạn</div>
+    <div class="tab-container">
+        <button class="tab-btn active" onclick="switchTab('keys')">LỊCH SỬ KEY</button>
+        <button class="tab-btn" onclick="switchTab('recharge')">LỊCH SỬ NẠP</button>
     </div>
 
-    <!-- Danh sách giao dịch -->
-    <div id="history-list">
-        
-        <!-- Mẫu 1: Giao dịch Nạp tiền thành công -->
-        <div class="history-card">
-            <div class="card-top">
-                <div class="service-info">
-                    <div class="service-icon"><i class="fas fa-wallet"></i></div>
-                    <div>
-                        <div class="service-name">Nạp tiền qua VietQR</div>
-                        <div class="order-id">Mã GD: #TX99281</div>
-                    </div>
-                </div>
-                <span class="status success">Thành công</span>
-            </div>
-            <div class="card-details">
-                <div class="detail-box">
-                    <span class="detail-label">Số tiền</span>
-                    <span class="detail-value" style="color: #10b981;">+100.000đ</span>
-                </div>
-                <div class="detail-box">
-                    <span class="detail-label">Thời gian</span>
-                    <span class="detail-value">12:40 - 01/05/2026</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Mẫu 2: Giao dịch mua hàng đang chờ -->
-        <div class="history-card">
-            <div class="card-top">
-                <div class="service-info">
-                    <div class="service-icon" style="background:rgba(168, 85, 247, 0.1); color:#a855f7;"><i class="fas fa-key"></i></div>
-                    <div>
-                        <div class="service-name">Mua Key Hack iOS</div>
-                        <div class="order-id">Mã GD: #TX99282</div>
-                    </div>
-                </div>
-                <span class="status pending">Đang chờ</span>
-            </div>
-            <div class="card-details">
-                <div class="detail-box">
-                    <span class="detail-label">Số tiền</span>
-                    <span class="detail-value" style="color: #ef4444;">-50.000đ</span>
-                </div>
-                <div class="detail-box">
-                    <span class="detail-label">Thời gian</span>
-                    <span class="detail-value">10:15 - 01/05/2026</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Mẫu 3: Giao dịch thất bại -->
-        <div class="history-card">
-            <div class="card-top">
-                <div class="service-info">
-                    <div class="service-icon" style="background:rgba(239, 68, 68, 0.1); color:#ef4444;"><i class="fas fa-undo"></i></div>
-                    <div>
-                        <div class="service-name">Hoàn tiền hệ thống</div>
-                        <div class="order-id">Mã GD: #TX99283</div>
-                    </div>
-                </div>
-                <span class="status failed">Thất bại</span>
-            </div>
-            <div class="card-details">
-                <div class="detail-box">
-                    <span class="detail-label">Số tiền</span>
-                    <span class="detail-value">+20.000đ</span>
-                </div>
-                <div class="detail-box">
-                    <span class="detail-label">Thời gian</span>
-                    <span class="detail-value">09:00 - 30/04/2026</span>
-                </div>
-            </div>
-        </div>
-
+    <div id="content-list">
+        <div class="empty-msg">Đang tải dữ liệu...</div>
     </div>
+</div>
 
-    <!-- Thông báo nếu không có dữ liệu (ẩn đi bằng JS nếu có data) -->
-    <!-- <div class="empty-state">
-        <i class="fas fa-folder-open"></i>
-        <p>Bạn chưa có giao dịch nào!</p>
-    </div> -->
-
+<!-- Music Player -->
+<div class="music-player" id="musicContainer">
+    <div class="music-info">
+        <div style="font-size: 10px; font-weight: 700; white-space: nowrap; color: #fff;">BGM - KTIENXIOS</div>
+        <div style="font-size: 9px; color: var(--text-sub);">Now Playing...</div>
+    </div>
+    <audio id="myAudio" loop>
+        <source src="https://scared-aquamarine-wzjsbpfpzz.edgeone.app/snaptt.me-48765111.mp3" type="audio/mpeg">
+    </audio>
+    <button class="music-btn" onclick="toggleMusic()" id="musicBtn">
+        <i class="fas fa-music"></i>
+    </button>
 </div>
 
 <script>
-    // Ông giáo có thể thêm code JS ở đây để lấy data từ Firebase
-    // rồi render ra thay cho mấy cái mẫu tôi viết sẵn ở trên nhé!
-</script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyDWe6sAcxUyis87c8GPLFwo5Z0zS3eO-34",
+        authDomain: "severupdate-1b36a.firebaseapp.com",
+        databaseURL: "https://severupdate-1b36a-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "severupdate-1b36a",
+        storageBucket: "severupdate-1b36a.firebasestorage.app",
+        messagingSenderId: "123894557961",
+        appId: "1:123894557961:web:c0c9ec59fb65f71da937d8"
+    };
 
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const auth = firebase.auth();
+
+    let currentTab = 'keys';
+    let userEmail = '';
+
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            userEmail = user.email;
+            loadKeysHistory();
+        } else {
+            window.location.href = "index.html";
+        }
+    });
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        if (tab === 'keys') loadKeysHistory();
+        else loadRechargeHistory();
+    }
+
+    function loadKeysHistory() {
+        const list = document.getElementById('content-list');
+        list.innerHTML = '<div class="empty-msg">Đang tải lịch sử mua...</div>';
+
+        database.ref('Orders').orderByChild('user').equalTo(userEmail).on('value', (snapshot) => {
+            if (currentTab !== 'keys') return;
+            if (!snapshot.exists()) {
+                list.innerHTML = '<div class="empty-msg">Bạn chưa mua Key nào.</div>';
+                return;
+            }
+
+            let html = '';
+            let orders = [];
+            snapshot.forEach(child => { orders.push(child.val()); });
+            
+            orders.reverse().forEach(order => {
+                html += `
+                <div class="history-item">
+                    <a href="https://www.mediafire.com/file/v24zpj8xncg1zyf/Free_Fire_1.123.1_1777549111.ipa/file" target="_blank" class="download-square">
+                        <i class="fas fa-cloud-download-alt"></i><span>TẢI IPA</span>
+                    </a>
+                    <div class="info-box">
+                        <div class="title-text">${order.product}</div>
+                        <div class="key-badge">
+                            <span class="key-text">${order.key}</span>
+                            <i class="fas fa-copy" style="font-size:0.7rem; cursor:pointer;" onclick="copyKey('${order.key}')"></i>
+                        </div>
+                    </div>
+                    <div class="status-box">
+                        <span class="status-label">THỜI HẠN</span>
+                        <span class="status-value" style="color:#fbbf24">30 Ngày</span>
+                    </div>
+                </div>`;
+            });
+            list.innerHTML = html;
+        });
+    }
+
+    function loadRechargeHistory() {
+        const list = document.getElementById('content-list');
+        list.innerHTML = '<div class="empty-msg">Đang tải lịch sử nạp...</div>';
+
+        database.ref('RechargeRequests').orderByChild('email').equalTo(userEmail).on('value', (snapshot) => {
+            if (currentTab !== 'recharge') return;
+            if (!snapshot.exists()) {
+                list.innerHTML = '<div class="empty-msg">Chưa có lịch sử nạp tiền.</div>';
+                return;
+            }
+
+            let html = '';
+            let items = [];
+            snapshot.forEach(child => { items.push(child.val()); });
+
+            items.reverse().forEach(item => {
+                const statusColor = item.status === 'success' ? '#10b981' : (item.status === 'pending' ? '#fbbf24' : '#ef4444');
+                const statusText = item.status === 'success' ? 'THÀNH CÔNG' : (item.status === 'pending' ? 'ĐANG CHỜ' : 'BỊ TỪ CHỐI');
+
+                html += `
+                <div class="history-item">
+                    <div class="recharge-icon"><i class="fas fa-receipt"></i></div>
+                    <div class="info-box">
+                        <div class="title-text">+${item.amount.toLocaleString()}đ</div>
+                        <div class="sub-text">${item.date || 'Giao dịch'}</div>
+                        <div class="sub-text" style="font-size:0.6rem; margin-top:2px; color:#6366f1">Nội dung: ${item.content}</div>
+                    </div>
+                    <div class="status-box">
+                        <span class="status-label">TRẠNG THÁI</span>
+                        <span class="status-value" style="color:${statusColor}">${statusText}</span>
+                    </div>
+                </div>`;
+            });
+            list.innerHTML = html;
+        });
+    }
+
+    function copyKey(text) {
+        navigator.clipboard.writeText(text).then(() => alert("✅ Đã copy Key!"));
+    }
+
+// --- LOGIC NHẠC TỰ ĐỘNG KHI CHẠM ---
+const audio = document.getElementById("myAudio");
+const musicBtn = document.getElementById("musicBtn");
+const musicContainer = document.getElementById("musicContainer");
+
+// 1. Cấu hình nguồn nhạc từ products.js
+if (typeof KTIENXIOS_CONFIG !== 'undefined') {
+    const musicSource = audio.querySelector('source');
+    musicSource.src = KTIENXIOS_CONFIG.musicUrl;
+    audio.load();
+    
+    const titleDisplay = document.querySelector('.music-info div');
+    if (titleDisplay) titleDisplay.innerText = KTIENXIOS_CONFIG.musicTitle;
+}
+
+// 2. Hàm cập nhật giao diện
+function updateMusicUI(isPlaying) {
+    if (isPlaying) {
+        musicBtn.classList.add('playing');
+        musicBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        if(musicContainer) musicContainer.classList.add('active');
+    } else {
+        musicBtn.classList.remove('playing');
+        musicBtn.innerHTML = '<i class="fas fa-music"></i>';
+        if(musicContainer) musicContainer.classList.remove('active');
+    }
+}
+
+// 3. Hàm xử lý phát nhạc (Fix lỗi trình duyệt chặn)
+function playMusic() {
+    audio.play().then(() => {
+        localStorage.setItem('musicPlaying', 'true');
+        updateMusicUI(true);
+        // Sau khi đã phát thành công, gỡ bỏ sự kiện lắng nghe để tránh phát lại khi chạm tiếp
+        document.removeEventListener('click', playMusic);
+        document.removeEventListener('touchstart', playMusic);
+    }).catch(err => console.log("Trình duyệt chờ tương tác..."));
+}
+
+// 4. Lắng nghe tương tác đầu tiên trên màn hình để mở nhạc
+if (localStorage.getItem('musicPlaying') !== 'false') {
+    document.addEventListener('click', playMusic);
+    document.addEventListener('touchstart', playMusic);
+}
+
+// 5. Nút bấm thủ công (Bật/Tắt)
+function toggleMusic() {
+    if (audio.paused) {
+        audio.play();
+        localStorage.setItem('musicPlaying', 'true');
+        updateMusicUI(true);
+    } else {
+        audio.pause();
+        localStorage.setItem('musicPlaying', 'false');
+        updateMusicUI(false);
+    }
+}
+
+// 6. Đồng bộ thời gian nhạc khi chuyển trang
+audio.addEventListener('timeupdate', () => {
+    localStorage.setItem('musicTime', audio.currentTime);
+});
+
+window.addEventListener('load', () => {
+    const savedTime = localStorage.getItem('musicTime');
+    const isPlaying = localStorage.getItem('musicPlaying');
+    if (savedTime) audio.currentTime = parseFloat(savedTime);
+    if (isPlaying === 'true') {
+        playMusic();
+    }
+});
+</script>
 </body>
 </html>
